@@ -34,3 +34,7 @@ build/
 
 ### FICHERO CON VARS .ENV ###
 .env
+
+mvnw
+
+.cmd
