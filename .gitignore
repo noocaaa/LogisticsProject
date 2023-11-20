@@ -36,6 +36,4 @@ build/
 .env
 
 mvnw
-mvnw.c
-./mvn/wrapper
 mvnw.cmd
