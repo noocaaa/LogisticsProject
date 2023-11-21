@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,9 +23,10 @@ public class CargoService {
 
     @Transactional
     public Cargo addCargo(Cargo cargo) {
+        Optional<Cargo> existingCargo = cargoRepository.findById(cargo.getId());
 
-        if (cargoRepository.findByName(cargo.getName()) != null) {
-            throw new RuntimeException("A cargo with the same name already exists.");
+        if (existingCargo != null) {
+            throw new RuntimeException("A cargo with the same number already exists.");
         }
 
         return cargoRepository.save(cargo);
@@ -39,7 +41,6 @@ public class CargoService {
         existingCargo.setName(cargo.getName());
         existingCargo.setWeight(cargo.getWeight());
         existingCargo.setStatus(cargo.getStatus());
-
 
         return cargoRepository.save(existingCargo);
     }
@@ -87,7 +88,9 @@ public class CargoService {
         }
 
         // Add the cargo to the order
-        Waypoint newWaypoint = new Waypoint(/* Parámetros necesarios como order, cargo, tipo de waypoint, etc. */);
+        Waypoint newWaypoint = new Waypoint();
+        newWaypoint.setCargo(cargo);
+        newWaypoint.setOrder(order);
         order.getWaypoints().add(newWaypoint);
 
         // Update cargo status
