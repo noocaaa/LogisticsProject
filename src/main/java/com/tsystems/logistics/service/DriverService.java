@@ -97,7 +97,7 @@ public class DriverService {
                 .orElseThrow(() -> new RuntimeException("Driver not found with id: " + driverId));
 
         // Check if status is valid.
-        List<String> validStatuses = Arrays.asList("AVAILABLE", "ON_LEAVE", "DRIVING");
+        List<String> validStatuses = Arrays.asList("REST", "DRIVING" );
 
         if (!validStatuses.contains(status)) {
             throw new RuntimeException("Invalid status provided.");
