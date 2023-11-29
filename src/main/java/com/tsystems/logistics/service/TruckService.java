@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -33,8 +34,8 @@ public class TruckService {
         Truck existingTruck = truckRepository.findById(truck.getId())
                 .orElseThrow(() -> new RuntimeException("Truck not found with id: " + truck.getId()));
 
-        // Unique truck number
-        if (!existingTruck.getNumber().equals(truck.getNumber()) && truckRepository.findByNumber(truck.getNumber()) != null) {
+        Truck truckWithSameNumber = truckRepository.findByNumber(truck.getNumber());
+        if (truckWithSameNumber != null && !truckWithSameNumber.getId().equals(truck.getId())) {
             throw new RuntimeException("Truck number is already in use by another truck.");
         }
 
@@ -70,35 +71,27 @@ public class TruckService {
 
     @Transactional
     public void assignTruckToOrder(Integer truckId, Integer orderId) {
-
         Truck truck = truckRepository.findById(truckId)
                 .orElseThrow(() -> new RuntimeException("Truck not found with id: " + truckId));
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
 
-        // Check that cargo and order are in the same city
-        if (!truck.getCurrentCity().equals(order.getTruck().getCurrentCity())) {
-            throw new RuntimeException("Truck and order are not in the same city.");
-        }
-
-        // Check that the size of the truck is correct for the order
-        if (truck.getCapacity() < order.getTruck().getCapacity()) {
-            throw new RuntimeException("Truck does not have enough capacity for the order.");
-        }
-
-        // Check if truck is available and it's available for the order.
-        if (!"AVAILABLE".equals(truck.getStatus())) {
+        if (!"OK".equals(truck.getStatus())) {
             throw new RuntimeException("Truck is currently unavailable.");
         }
 
-        // If the truck its already assign to the order
-        if (truck.getOrders().contains(order)) {
+        if (truck.getOrders() != null && truck.getOrders().contains(order)) {
             throw new RuntimeException("Truck is already assigned to this order.");
         }
 
-        // Set the truck for the order, and update the status.
+        if (truck.getOrders() == null) {
+            truck.setOrders(new HashSet<>());
+        }
         truck.getOrders().add(order);
-        truck.setStatus("ASSIGNED");
+        truck.setStatus("NOK");
+
         truckRepository.save(truck);
     }
+
+
 }
