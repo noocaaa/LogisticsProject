@@ -5,11 +5,12 @@ import com.tsystems.logistics.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.ui.Model;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("/orderss")
 public class OrderController {
 
     @Autowired
@@ -47,4 +48,5 @@ public class OrderController {
         orderService.changeOrderStatus(id, completed);
         return ResponseEntity.ok().build();
     }
+
 }

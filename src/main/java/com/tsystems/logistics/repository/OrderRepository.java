@@ -15,4 +15,6 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     Optional<Order> findByIdAndCompleted(Integer id, Boolean completed);
 
+    int countByCompleted(boolean completed);
+
 }

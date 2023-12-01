@@ -1,0 +1,141 @@
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #343a40;
+    --light-bg-color: #f8f9fa;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+}
+
+body, h1, h2, h3, button, a {
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.wrapper {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background: var(--secondary-color);
+    color: white;
+}
+
+.content {
+    flex-grow: 1;
+    background: var(--light-bg-color);
+    padding: 20px;
+}
+
+.navbar {
+    background-color: #20b2aa;
+    color: white;
+    padding: 20px;
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    padding: 15px;
+}
+
+.btn {
+    border: none;
+    border-radius: 4px;
+    padding: 10px;
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.btn-warning {
+    background-color: var(--warning-color);
+    color: black;
+}
+
+.icon {
+    margin-right: 5px;
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 10px;
+        font-size: 1rem;
+    }
+
+    .sidebar ul li a {
+        padding-left: 15px;
+    }
+
+    .content {
+        padding: 20px;
+    }
+}
+
+.logout-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+}
+
+.logout-btn:hover {
+    background-color: #bd2130;
+}
+
+.sidebar ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+.sidebar ul li {
+    padding: 15px;
+    display: block; /
+}
+
+.sidebar ul li a {
+    display: block;
+    color: white;
+    text-decoration: none;
+    transition: background-color 0.2s, padding-left 0.2s;
+}
+
+.sidebar ul li a:hover {
+    background-color: #495057;
+    padding-left: 30px;
+}
+
+.sidebar-button {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.2s;
+    width: 100%;
+    text-align: left; /
+}
+
+.sidebar-button:hover {
+    background-color: #5a6268;
+}

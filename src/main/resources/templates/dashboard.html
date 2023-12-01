@@ -1,0 +1,78 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/libraryStyles.css}">
+</head>
+
+<body>
+
+<div class="navbar">
+    <span>Welcome, user </span>
+    <button class="logout-btn" onclick="location.href='logout'">Log Out</button>
+</div>
+
+<div class="wrapper">
+    <nav class="sidebar">
+        <ul>
+            <li><button class="sidebar-button" onclick="location.href='logout'">Dashboard</button></li>
+            <li><button class="sidebar-button" onclick="location.href='trucks'">Trucks</button></li>
+            <li><button class="sidebar-button" onclick="location.href='drivers'">Drivers</button></li>
+            <li><button class="sidebar-button" onclick="location.href='orders'">Orders</button></li>
+            <li><button class="sidebar-button" onclick="location.href='orderAndTruck'">Order & Truck Matching</button></li>
+            <li><button class="sidebar-button" onclick="location.href='settings'">Settings</button></li>
+        </ul>
+    </nav>
+
+    <div class="content">
+        <div class="dashboard-header">
+            <h2>Dashboard</h2>
+        </div>
+        <div class="quick-actions">
+            <button class="btn btn-primary" onclick="location.href='add-truck'">Add Truck</button>
+            <button class="btn btn-primary" onclick="location.href='add-driver'">Add Driver</button>
+            <button class="btn btn-primary" onclick="location.href='add-order'">Add Order</button>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="info-box">
+                    <h3>Orders Summary</h3>
+                    <p><strong>Total Orders:</strong> <span th:text="${dashboardData['totalOrders']}"></span></p>
+                    <p><strong>In Progress:</strong> <span th:text="${dashboardData['completedOrders']}"></p>
+                    <p><strong>Completed:</strong> <span th:text="${dashboardData['inProgressOrders']}"></span></p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-box">
+                    <h3>Alerts & Notifications</h3>
+                    <p><strong>Trucks needing maintenance:</strong> <span th:text="${dashboardData['maintenanceTrucks']}"></span></p>
+                    <p><strong>Drivers with the maximum hours worked:</strong> <span th:text="${dashboardData['driversRelax']}">/span></p>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="info-box">
+                    <h3>Truck Availability</h3>
+                    <!-- Aquí podrías incluir una tabla o lista de camiones disponibles -->
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-box">
+                    <h3>Performance Charts</h3>
+                    <!-- Insertar gráficos de rendimiento -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

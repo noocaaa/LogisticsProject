@@ -12,4 +12,6 @@ public interface DriverRepository extends JpaRepository<Driver, Integer> {
     // Optional Consulting Methods
     Optional<Driver> findByPersonalNumber(String personalNumber);
     Optional<Driver> findByNameAndSurname(String name, String surname);
+
+    int countByWorkingHours(int hours);
 }

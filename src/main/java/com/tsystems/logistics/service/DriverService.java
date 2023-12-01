@@ -17,7 +17,7 @@ public class DriverService {
 
     private final DriverRepository driverRepository;
     private final TruckRepository truckRepository;
-    private final int MAX_WORKING_HOURS = 60;
+    private final int MAX_WORKING_HOURS = 176;
 
     @Transactional
     public Driver addDriver(Driver driver) {
@@ -114,6 +114,10 @@ public class DriverService {
     public Driver getDriverById(Integer id) {
         return driverRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Driver not found with id: " + id));
+    }
+
+    public int getDriverswithMaximumWorkHours() {
+        return driverRepository.countByWorkingHours(MAX_WORKING_HOURS);
     }
 
 }

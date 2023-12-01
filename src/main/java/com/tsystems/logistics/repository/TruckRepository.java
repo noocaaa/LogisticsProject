@@ -9,4 +9,7 @@ public interface TruckRepository extends JpaRepository<Truck, Integer> {
 
     // Optional Consulting Methods
     Truck findByNumber(String number);
+
+    int countByStatus(String status);
+
 }

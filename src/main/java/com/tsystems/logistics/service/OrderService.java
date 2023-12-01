@@ -146,4 +146,18 @@ public class OrderService {
         }
     }
 
+    // NEW FUNCTIONS
+
+    public int getTotalNumberOfOrders() {
+        return (int) orderRepository.count();
+    }
+
+    public int getNumberOfCompletedOrders() {
+        return orderRepository.countByCompleted(true);
+    }
+
+    public int getNumberOfInProgressOrders() {
+        return orderRepository.countByCompleted(false);
+    }
+
 }

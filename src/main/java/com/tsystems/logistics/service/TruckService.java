@@ -93,5 +93,8 @@ public class TruckService {
         truckRepository.save(truck);
     }
 
+    public int getNOKStatus() {
+        return truckRepository.countByStatus("NOK");
+    }
 
 }
