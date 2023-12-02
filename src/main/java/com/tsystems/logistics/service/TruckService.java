@@ -4,6 +4,9 @@ import com.tsystems.logistics.entities.Truck;
 import com.tsystems.logistics.entities.Order;
 import com.tsystems.logistics.repository.TruckRepository;
 import com.tsystems.logistics.repository.OrderRepository;
+
+import com.tsystems.logistics.dto.TruckDTO;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,11 @@ public class TruckService {
             throw new RuntimeException("Truck number already in use.");
         }
 
+        String status = truck.getStatus();
+        if (!(status.equals("OK") || status.equals("NOK"))) {
+            throw new RuntimeException("Invalid truck status. Status must be 'OK' or 'NOK'.");
+        }
+
         return truckRepository.save(truck);
     }
 
@@ -37,6 +45,11 @@ public class TruckService {
         Truck truckWithSameNumber = truckRepository.findByNumber(truck.getNumber());
         if (truckWithSameNumber != null && !truckWithSameNumber.getId().equals(truck.getId())) {
             throw new RuntimeException("Truck number is already in use by another truck.");
+        }
+
+        String status = truck.getStatus();
+        if (!(status.equals("OK") || status.equals("NOK"))) {
+            throw new RuntimeException("Invalid truck status. Status must be 'OK' or 'NOK'.");
         }
 
         existingTruck.setNumber(truck.getNumber());
@@ -95,6 +108,32 @@ public class TruckService {
 
     public int getNOKStatus() {
         return truckRepository.countByStatus("NOK");
+    }
+
+    public TruckDTO convertToDTO(Truck truck) {
+        TruckDTO dto = new TruckDTO();
+        dto.setId(truck.getId());
+        dto.setNumber(truck.getNumber());
+        dto.setCapacity(truck.getCapacity());
+        dto.setStatus(truck.getStatus());
+        dto.setCurrentCity(truck.getCurrentCity());
+
+        return dto;
+    }
+
+    public Truck convertToEntity(TruckDTO truckDTO) {
+        Truck truck;
+        if (truckDTO.getId() != null) {
+            truck = getTruckById(truckDTO.getId());
+        } else {
+            truck = new Truck();
+        }
+        truck.setNumber(truckDTO.getNumber());
+        truck.setCapacity(truckDTO.getCapacity());
+        truck.setStatus(truckDTO.getStatus());
+        truck.setCurrentCity(truckDTO.getCurrentCity());
+
+        return truck;
     }
 
 }
