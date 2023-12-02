@@ -1,26 +1,55 @@
 package com.tsystems.logistics.controller;
 
+import com.tsystems.logistics.dto.TruckDTO;
 import com.tsystems.logistics.entities.Driver;
+import com.tsystems.logistics.entities.Truck;
 import com.tsystems.logistics.service.DriverService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/driverss")
+@RequestMapping("/drivers")
 public class DriverController {
 
     @Autowired
     private DriverService driverService;
 
     @GetMapping
-    public ResponseEntity<List<Driver>> getAllDrivers() {
-        return ResponseEntity.ok(driverService.getAllDrivers());
+    public String driversPage(Model model) {
+        List<Driver> drivers = driverService.getAllDrivers();
+        model.addAttribute("drivers", drivers);
+
+        return "drivers";
     }
 
-    @GetMapping("/{id}")
+
+    @GetMapping("/add")
+    public String addDriverForm(Model model, RedirectAttributes redirectAttributes) {
+        if (redirectAttributes.containsAttribute("error")) {
+            model.addAttribute("error", redirectAttributes.getFlashAttributes().get("error"));
+        }
+        return "addDriver";
+    }
+
+
+    @PostMapping("/addDriver")
+    public String addDriver(@ModelAttribute DriverDTO driverDTO, RedirectAttributes redirectAttributes) {
+        try {
+            Truck driver = driverService.convertToEntity(driverDTO);
+            driverService.addDriver(driver);
+            return "redirect:/drivers";
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/trucks/add";
+        }
+    }
+
+    /* @GetMapping("/{id}")
     public ResponseEntity<Driver> getDriverById(@PathVariable Integer id) {
         return ResponseEntity.ok(driverService.getDriverById(id));
     }
@@ -52,5 +81,5 @@ public class DriverController {
     public ResponseEntity<Void> updateDriverStatus(@RequestParam Integer driverId, @RequestParam String status) {
         driverService.updateDriverStatus(driverId, status);
         return ResponseEntity.ok().build();
-    }
+    } */
 }

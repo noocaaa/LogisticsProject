@@ -8,10 +8,16 @@ import org.springframework.web.bind.annotation.*;
 
 import com.tsystems.logistics.service.OrderService;
 import com.tsystems.logistics.service.TruckService;
-import com.tsystems.logistics.service.DriverService;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.tsystems.logistics.entities.Truck;
+
+import java.util.stream.Collectors;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 @Controller
 public class LoginController {
@@ -52,20 +58,15 @@ public class LoginController {
         dashboardData.put("maintenanceTrucks", truckService.getNOKStatus());
         dashboardData.put("driversRelax", driverService.getDriverswithMaximumWorkHours());
 
+        List<Truck> availableTrucks = truckService.getAllTrucks().stream()
+                .filter(truck -> "OK".equals(truck.getStatus()))
+                .collect(Collectors.toList());
+
 
         model.addAttribute("dashboardData", dashboardData);
+        model.addAttribute("trucks", availableTrucks);
 
         return "dashboard";
-    }
-
-    @GetMapping("/trucks")
-    public String trucksPage() {
-        return "trucks";
-    }
-
-    @GetMapping("/drivers")
-    public String driversPage() {
-        return "drivers";
     }
 
     @GetMapping("/orders")
