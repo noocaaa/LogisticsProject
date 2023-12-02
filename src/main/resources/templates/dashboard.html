@@ -14,19 +14,19 @@
 <body>
 
 <div class="navbar">
-    <span>Welcome, user </span>
+    <span>Welcome </span>
     <button class="logout-btn" onclick="location.href='logout'">Log Out</button>
 </div>
 
 <div class="wrapper">
     <nav class="sidebar">
         <ul>
-            <li><button class="sidebar-button" onclick="location.href='logout'">Dashboard</button></li>
-            <li><button class="sidebar-button" onclick="location.href='trucks'">Trucks</button></li>
-            <li><button class="sidebar-button" onclick="location.href='drivers'">Drivers</button></li>
-            <li><button class="sidebar-button" onclick="location.href='orders'">Orders</button></li>
-            <li><button class="sidebar-button" onclick="location.href='orderAndTruck'">Order & Truck Matching</button></li>
-            <li><button class="sidebar-button" onclick="location.href='settings'">Settings</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/dashboard'">Dashboard</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/trucks'">Trucks</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/drivers'">Drivers</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/orders'">Orders</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/orderAndTruck'">Order & Truck Matching</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/settings'">Settings</button></li>
         </ul>
     </nav>
 
@@ -35,9 +35,9 @@
             <h2>Dashboard</h2>
         </div>
         <div class="quick-actions">
-            <button class="btn btn-primary" onclick="location.href='add-truck'">Add Truck</button>
-            <button class="btn btn-primary" onclick="location.href='add-driver'">Add Driver</button>
-            <button class="btn btn-primary" onclick="location.href='add-order'">Add Order</button>
+            <button class="btn btn-primary" onclick="location.href='/trucks/add'">Add Truck</button>
+            <button class="btn btn-primary" onclick="location.href='/drivers/add'">Add Driver</button>
+            <button class="btn btn-primary" onclick="location.href='/orders/add'">Add Order</button>
         </div>
         <div class="row">
             <div class="col-md-6">
@@ -60,13 +60,58 @@
             <div class="col-md-6">
                 <div class="info-box">
                     <h3>Truck Availability</h3>
-                    <!-- Aquí podrías incluir una tabla o lista de camiones disponibles -->
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Number</th>
+                            <th>Capacity</th>
+                            <th>Current City</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="truck : ${trucks}">
+                            <td th:text="${truck.number}">Truck Number</td>
+                            <td th:text="${truck.capacity}">Capacity</td>
+                            <td th:text="${truck.currentCity}">City</td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+
             <div class="col-md-6">
                 <div class="info-box">
                     <h3>Performance Charts</h3>
                     <!-- Insertar gráficos de rendimiento -->
+                    <!--
+                        Gráfico de Barras - Carga Transportada por Camión:
+        Muestra la capacidad total utilizada por cada camión en un periodo de tiempo determinado.
+        Útil para monitorear la eficiencia en el uso de la capacidad de carga de los camiones.
+
+    Gráfico de Líneas - Horas de Trabajo de los Conductores:
+        Representa las horas trabajadas por cada conductor durante el mes.
+        Ayuda a asegurar que no se excedan los límites de tiempo y a planificar los descansos necesarios.
+
+    Gráfico Circular - Estado de los Pedidos:
+        Porcentaje de pedidos completados frente a los que están en progreso.
+        Permite a los empleados de la empresa tener una visión rápida del estado de los pedidos.
+
+    Mapa de Calor - Actividad de los Camiones en Diferentes Ciudades:
+        Utiliza un mapa del país con ciudades resaltadas según la cantidad de actividad de carga y descarga.
+        Proporciona una visión geográfica de dónde se está realizando más trabajo.
+
+    Histograma - Distribución de Cargas por Peso:
+        Muestra cómo se distribuyen las cargas por diferentes rangos de peso.
+        Puede ser útil para optimizar la asignación de carga entre los camiones.
+
+    Gráfico de Área - Uso del Tiempo de los Conductores:
+        Diferencia entre manejo, carga/descarga, y tiempo de descanso.
+        Ayuda a comprender cómo se distribuye el tiempo de trabajo de los conductores y a identificar posibles ineficiencias.
+
+    Tabla de Líderes - Clasificación de Conductores por Distancia Conducida:
+        Clasifica a los conductores por la distancia total conducida en un periodo de tiempo.
+        Reconoce a los conductores más activos y puede servir para programas de recompensas.
+        -->
                 </div>
             </div>
         </div>

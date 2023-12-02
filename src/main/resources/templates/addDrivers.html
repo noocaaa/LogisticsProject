@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Trucks</title>
+  <title>Add Driver</title>
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
@@ -31,43 +31,15 @@
   </nav>
 
   <div class="content">
-    <h2>Truck List</h2>
+    <h2>Add Driver</h2>
 
-    <button class="btn btn-primary mb-3" onclick="location.href='/trucks/add'">Add Truck</button>
+    <div th:if="${error}" class="alert alert-danger">
+      <p th:text="${error}"></p>
+    </div>
 
-    <table class="table table-hover">
-      <thead>
-      <tr>
-        <th>ID</th>
-        <th>Number</th>
-        <th>Capacity (Tones)</th>
-        <th>Status</th>
-        <th>Current City</th>
-        <th>Actions</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr th:each="truck : ${trucks}">
-        <td th:text="${truck.id}"></td>
-        <td th:text="${truck.number}"></td>
-        <td th:text="${truck.capacity}"></td>
-        <td th:text="${truck.status}"></td>
-        <td th:text="${truck.currentCity}"></td>
-        <td>
-          <a th:href="@{/trucks/edit/{id}(id=${truck.id})}" class="btn btn-warning btn-sm">
-            <i class="icon fas fa-edit"></i> Edit
-          </a>
-          <form th:action="@{/trucks/delete/{id}(id=${truck.id})}" method="post" style="display: inline;">
-            <button type="submit" class="btn btn-danger btn-sm">
-              <i class="icon fas fa-trash-alt"></i> Delete
-            </button>
-          </form>
-        </td>
-      </tr>
-      </tbody>
-    </table>
   </div>
 
 </div>
+
 </body>
 </html>

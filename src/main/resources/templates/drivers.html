@@ -14,23 +14,27 @@
 <body>
 
 <div class="navbar">
-    <span>Welcome, user </span>
+    <span>Welcome</span>
     <button class="logout-btn" onclick="location.href='logout'">Log Out</button>
 </div>
 
 <div class="wrapper">
     <nav class="sidebar">
         <ul>
-            <li><button class="sidebar-button" onclick="location.href='logout'">Dashboard</button></li>
-            <li><button class="sidebar-button" onclick="location.href='trucks'">Trucks</button></li>
-            <li><button class="sidebar-button" onclick="location.href='drivers'">Drivers</button></li>
-            <li><button class="sidebar-button" onclick="location.href='orders'">Orders</button></li>
-            <li><button class="sidebar-button" onclick="location.href='orderAndTruck'">Order & Truck Matching</button></li>
-            <li><button class="sidebar-button" onclick="location.href='settings'">Settings</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/dashboard'">Dashboard</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/trucks'">Trucks</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/drivers'">Drivers</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/orders'">Orders</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/orderAndTruck'">Order & Truck Matching</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/settings'">Settings</button></li>
         </ul>
     </nav>
 
     <div class="content">
+        <h2>Truck List</h2>
+
+        <button class="btn btn-primary mb-3" onclick="location.href='/drivers/add'">Add Driver</button>
+
     </div>
 </div>
 
