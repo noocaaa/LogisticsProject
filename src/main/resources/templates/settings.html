@@ -31,6 +31,24 @@
     </nav>
 
     <div class="content">
+        <h4>Settings</h4>
+        <form action="{{ url_for('teacher.change_password') }}" method="post" onsubmit="return validateForm()">
+            <div class="form-group">
+                <label for="currentPassword">Actual Password:</label>
+                <input type="password" class="form-control" id="currentPassword" placeholder="Actual password" name="currentPassword">
+                <small class="text-danger" id="currentPasswordError"></small>
+            </div>
+            <div class="form-group">
+                <label for="newPassword">New Password:</label>
+                <input type="password" class="form-control" id="newPassword" placeholder="New password" name="newPassword">
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm new password:</label>
+                <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm new password" name="confirmPassword">
+                <small class="text-danger" id="confirmPasswordError"></small>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
     </div>
 </div>
 

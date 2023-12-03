@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Driver Dashboard</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f4f4;
+        }
+        .card {
+            margin-top: 20px;
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div th:if="${error}">
+        <div class="alert alert-danger">
+            <p th:text="${error}"></p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2>Driver Dashboard</h2>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Personal Details</h5>
+            <p class="card-text">Driver's Personal Number: <span th:text="${driverDTO.personalNumber}"></span></p>
+            <p class="card-text">Co-Driver's Personal Number: <span th:text="${driverDTO.coDrivers}"></span></p>
+            <p class="card-text">Truck Number: <span th:text="${driverDTO.truckNumber}"></span></p>
+            <p class="card-text">Order Number: <span th:text="${driverDTO.orderNumber}"></span></p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4>Waypoints</h4>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item" th:each="waypoint : ${driverDTO.waypoints}">
+                <span th:text="${waypoint.type} + ' in ' + ${waypoint.cityName} + ' - Cargo ID: ' + ${waypoint.cargoId}"></span>
+                <form th:action="@{/updateCargoAndOrderStatus}" method="post">
+                    <input type="hidden" name="waypointId" th:value="${waypoint.id}">
+                    <select class="form-control" name="orderStatus">
+                        <option value="Uploaded">Uploaded</option>
+                        <option value="Unloaded">Unloaded</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">Update status</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4>Shift Management</h4>
+        </div>
+        <div class="card-body d-flex justify-content-center">
+            <div class="btn-group" role="group">
+                <form th:action="@{/drivers/startShift}" method="post">
+                    <button type="submit" class="btn btn-success">Start Shift</button>
+                </form>
+                <form th:action="@{/drivers/endShift}" method="post">
+                    <button type="submit" class="btn btn-danger">End Shift</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4>Update Status</h4>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/updateDriverStatus}" method="post">
+                <div class="form-group">
+                    <label for="driverStatus">Driver Status</label>
+                    <select class="form-control" id="driverStatus" name="status">
+                        <option>Behind the wheel</option>
+                        <option>Second driver</option>
+                        <option>Loading and unloading work</option>
+                        <option>Rest</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Status</button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

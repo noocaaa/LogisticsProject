@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Orders</title>
+    <title>Order Details</title>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
@@ -31,36 +31,37 @@
     </nav>
 
     <div class="content">
-        <h2>Order List</h2>
+            <h2>Order Details</h2>
 
-        <button class="btn btn-primary mb-3" onclick="location.href='/orders/add'">Add Order</button>
+            <p><strong>Order ID:</strong> <span th:text="${order.id}"></span></p>
+            <p><strong>Completed:</strong> <span th:text="${order.completed ? 'Yes' : 'No'}"></span></p>
+            <p><strong>Truck Number:</strong> <span th:text="${order.truck.id}"></span></p>
 
-        <table class="table table-hover">
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Completed</th>
-                <th>Waypoints Count</th>
-                <th>Drivers</th>
-                <th>Truck Number</th>
+            <h3>Assigned Drivers</h3>
+            <ul>
+                <li th:each="driver : ${order.drivers}">
+                    <span th:text="${driver.name} + ' ' + ${driver.surname}"></span>
+                </li>
+            </ul>
 
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="order : ${orders}">
-                <td th:text="${order.id}"></td>
-                <td th:text="${order.completed ? 'Yes' : 'No'}"></td>
-                <td th:text="${order.getWaypointsCount()}"></td>
-                <td th:text="${order.getDrivers().size()}"></td>
-                <td th:text="${order.getTruck().getId()}"></td>
-                <td>
-                    <a th:href="@{/orders/details/{id}(id=${order.id})}" class="btn btn-warning btn-sm">
-                        <i class="icon fas fa-edit"></i> Details
-                    </a>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+            <h3>Waypoints</h3>
+
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th>City</th>
+                    <th>Cargo</th>
+                    <th>Type</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="waypoint : ${order.waypoints}">
+                    <td th:text="${waypoint.getCityId()}"></td>
+                    <td th:text="${waypoint.cargoId}"></td>
+                    <td th:text="${waypoint.type}"></td>
+                </tr>
+                </tbody>
+            </table>
     </div>
 
 </div>
