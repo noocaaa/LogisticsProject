@@ -1,18 +1,22 @@
 package com.tsystems.logistics.controller;
 
-import com.tsystems.logistics.dto.TruckDTO;
 import com.tsystems.logistics.entities.Driver;
-import com.tsystems.logistics.entities.Truck;
+import org.springframework.stereotype.Controller;
 import com.tsystems.logistics.service.DriverService;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import java.security.Principal;
+
+import com.tsystems.logistics.dto.DriverDTO;
 
 import java.util.List;
 
-@RestController
+@Controller
 @RequestMapping("/drivers")
 public class DriverController {
 
@@ -23,7 +27,6 @@ public class DriverController {
     public String driversPage(Model model) {
         List<Driver> drivers = driverService.getAllDrivers();
         model.addAttribute("drivers", drivers);
-
         return "drivers";
     }
 
@@ -33,21 +36,73 @@ public class DriverController {
         if (redirectAttributes.containsAttribute("error")) {
             model.addAttribute("error", redirectAttributes.getFlashAttributes().get("error"));
         }
-        return "addDriver";
+        return "addDrivers";
     }
 
 
     @PostMapping("/addDriver")
     public String addDriver(@ModelAttribute DriverDTO driverDTO, RedirectAttributes redirectAttributes) {
         try {
-            Truck driver = driverService.convertToEntity(driverDTO);
+            Driver driver = driverService.convertToEntity(driverDTO);
             driverService.addDriver(driver);
             return "redirect:/drivers";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/trucks/add";
+            return "redirect:/drivers/add";
         }
     }
+
+    @GetMapping("/edit/{id}")
+    public String showEditForm(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
+        Driver driver = driverService.getDriverById(id);
+        model.addAttribute("driver", driver);
+
+        if (redirectAttributes.containsAttribute("error")) {
+            model.addAttribute("error", redirectAttributes.getFlashAttributes().get("error"));
+        }
+
+        return "editDriver";
+    }
+
+    @PutMapping("/editDrivers/{id}")
+    public String updateDriver(@PathVariable Integer id, @ModelAttribute DriverDTO driverDTO, RedirectAttributes redirectAttributes) {
+        try {
+            Driver driver = driverService.convertToEntity(driverDTO);
+            driver.setId(id);
+            driverService.updateDriver(driver);
+            return "redirect:/drivers";
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/drivers/edit/" + id;
+        }
+    }
+
+    @PostMapping("/delete/{id}")
+    public String deleteDriver(@PathVariable Integer id) {
+        driverService.deleteDriver(id);
+        return "redirect:/drivers";
+    }
+
+    @PostMapping("/startShift")
+    public String startShift(Principal principal) {
+        String username = principal.getName();
+        driverService.startShift(username);
+        return "redirect:/dashboard";
+    }
+
+    @PostMapping("/endShift")
+    public String endShift(Principal principal, RedirectAttributes redirectAttributes) {
+        try {
+            String username = principal.getName();
+            driverService.endShift(username);
+            return "redirect:/dashboard";
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/dashboard";
+        }
+    }
+
+
 
     /* @GetMapping("/{id}")
     public ResponseEntity<Driver> getDriverById(@PathVariable Integer id) {

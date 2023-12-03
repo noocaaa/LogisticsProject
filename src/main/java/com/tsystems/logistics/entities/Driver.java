@@ -2,6 +2,7 @@ package com.tsystems.logistics.entities;
 
 import jakarta.persistence.*;
 
+import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -42,6 +43,39 @@ public class Driver {
             joinColumns = @JoinColumn(name = "driver_id"),
             inverseJoinColumns = @JoinColumn(name = "order_id"))
     private Set<Order> orders = new LinkedHashSet<>();
+
+    @Column(name = "shift_start_time")
+    private Instant shiftStartTime;
+
+    @Column(name = "shift_end_time")
+    private Instant shiftEndTime;
+
+    @Column(name = "accumulated_minutes")
+    private Integer accumulatedMinutes;
+
+    public Integer getAccumulatedMinutes() {
+        return accumulatedMinutes;
+    }
+
+    public void setAccumulatedMinutes(Integer accumulatedMinutes) {
+        this.accumulatedMinutes = accumulatedMinutes;
+    }
+
+    public Instant getShiftEndTime() {
+        return shiftEndTime;
+    }
+
+    public void setShiftEndTime(Instant shiftEndTime) {
+        this.shiftEndTime = shiftEndTime;
+    }
+
+    public Instant getShiftStartTime() {
+        return shiftStartTime;
+    }
+
+    public void setShiftStartTime(Instant shiftStartTime) {
+        this.shiftStartTime = shiftStartTime;
+    }
 
     public Integer getId() {
         return id;
@@ -114,5 +148,4 @@ public class Driver {
     public void setOrders(Set<Order> orders) {
         this.orders = orders;
     }
-
 }

@@ -100,5 +100,8 @@ public class CargoService {
         orderRepository.save(order);
     }
 
+    public int cargoByStatus(String status) {
+        return cargoRepository.countByStatus(status);
+    }
 
 }

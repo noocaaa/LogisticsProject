@@ -1,20 +1,24 @@
 package com.tsystems.logistics.service;
 
+import com.tsystems.logistics.entities.Order;
 import com.tsystems.logistics.entities.Driversorder;
 import com.tsystems.logistics.entities.DriversorderId;
 import com.tsystems.logistics.repository.DriversorderRepository;
+import com.tsystems.logistics.repository.OrderRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class DriversorderService {
 
     private final DriversorderRepository driversorderRepository;
+    private final OrderRepository orderRepository;
 
     @Transactional
     public Driversorder addDriversorder(Driversorder driversorder) {

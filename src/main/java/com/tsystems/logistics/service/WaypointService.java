@@ -4,6 +4,9 @@ import com.tsystems.logistics.entities.Order;
 import com.tsystems.logistics.entities.Waypoint;
 import com.tsystems.logistics.entities.Cargo;
 
+import com.tsystems.logistics.dto.WaypointDTO;
+
+
 import com.tsystems.logistics.repository.CityRepository;
 import com.tsystems.logistics.repository.OrderRepository;
 import com.tsystems.logistics.repository.WaypointRepository;
@@ -95,4 +98,22 @@ public class WaypointService {
         return "loading".equals(type) || "unloading".equals(type);
     }
 
+    public WaypointDTO convertToDTO(Waypoint waypoint) {
+        if (waypoint == null) {
+            return null;
+        }
+
+        WaypointDTO dto = new WaypointDTO();
+        dto.setId(waypoint.getId());
+        dto.setOrderId(waypoint.getOrder().getId());
+        dto.setCityId(waypoint.getCity().getId());
+        dto.setCargoId(waypoint.getCargo().getId());
+        dto.setType(waypoint.getType());
+
+        return dto;
+    }
+
+    private String getCityName(Waypoint waypoint) {
+        return waypoint.getCity().getName();
+    }
 }

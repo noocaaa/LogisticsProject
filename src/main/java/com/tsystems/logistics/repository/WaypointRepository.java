@@ -17,4 +17,6 @@ public interface WaypointRepository extends JpaRepository<Waypoint, Integer> {
     List<Waypoint> findByCargo_Id(Integer cargoId);
 
     List<Waypoint> findByType(String type);
+
+    List<Waypoint> findByOrderId(Integer orderId);
 }

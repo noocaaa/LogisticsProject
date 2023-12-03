@@ -9,4 +9,6 @@ public interface CargoRepository extends JpaRepository<Cargo, Integer> {
 
     // Optional Consulting Methods
     Cargo findByName(String name);
+
+    int countByStatus(String status);
 }

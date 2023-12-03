@@ -51,12 +51,21 @@ class OrderServiceTest {
         City cityA = new City();
         cityA.setName("CityA");
 
+        City cityB = new City();
+        cityB.setName("CityB");
+
         Waypoint waypoint1 = new Waypoint();
-        waypoint1.setType("unloading");
+        waypoint1.setType("loading");
         waypoint1.setCargo(cargo1);
         waypoint1.setCity(cityA);
 
+        Waypoint waypoint2 = new Waypoint();
+        waypoint2.setType("unloading");
+        waypoint2.setCargo(cargo1);
+        waypoint2.setCity(cityB);
+
         testWaypoints.add(waypoint1);
+        testWaypoints.add(waypoint2);
 
         testTruck.setStatus("OK");
 
@@ -105,12 +114,21 @@ class OrderServiceTest {
         City cityA = new City();
         cityA.setName("CityA");
 
+        City cityB = new City();
+        cityB.setName("CityB");
+
         Waypoint waypoint1 = new Waypoint();
-        waypoint1.setType("unloading");
+        waypoint1.setType("loading");
         waypoint1.setCargo(cargo1);
         waypoint1.setCity(cityA);
 
+        Waypoint waypoint2 = new Waypoint();
+        waypoint2.setType("unloading");
+        waypoint2.setCargo(cargo1);
+        waypoint2.setCity(cityB);
+
         testWaypoints.add(waypoint1);
+        testWaypoints.add(waypoint2);
 
         testTruck.setStatus("OK");
 
@@ -124,7 +142,7 @@ class OrderServiceTest {
 
         when(orderRepository.save(any(Order.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        Order updatedOrder = orderService.updateOrder(testOrder);
+        Order updatedOrder = orderService.updateOrder(testOrder, false);
 
         assertNotNull(updatedOrder);
 
@@ -145,7 +163,7 @@ class OrderServiceTest {
         when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            orderService.updateOrder(order);
+            orderService.updateOrder(order, false);
         });
 
         assertEquals("Order not found with id: " + 1 , exception.getMessage());
