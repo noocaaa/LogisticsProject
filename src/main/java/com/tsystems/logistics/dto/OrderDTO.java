@@ -1,14 +1,15 @@
 package com.tsystems.logistics.dto;
 
-import java.util.Date;
+import java.util.Set;
 
 public class OrderDTO {
     private Integer id;
-    private String status;
-    private String description;
-    private Date creationDate;
-    private DriverDTO driver;
+    private Boolean completed;
     private TruckDTO truck;
+    private Set<DriverDTO> drivers;
+    private Set<WaypointDTO> waypoints;
+
+    private Integer waypointsCount;
 
     public Integer getId() {
         return id;
@@ -18,36 +19,12 @@ public class OrderDTO {
         this.id = id;
     }
 
-    public String getStatus() {
-        return status;
+    public Boolean getCompleted() {
+        return completed;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Date getCreationDate() {
-        return creationDate;
-    }
-
-    public void setCreationDate(Date creationDate) {
-        this.creationDate = creationDate;
-    }
-
-    public DriverDTO getDriver() {
-        return driver;
-    }
-
-    public void setDriver(DriverDTO driver) {
-        this.driver = driver;
+    public void setCompleted(Boolean completed) {
+        this.completed = completed;
     }
 
     public TruckDTO getTruck() {
@@ -57,4 +34,41 @@ public class OrderDTO {
     public void setTruck(TruckDTO truck) {
         this.truck = truck;
     }
+
+    public Set<DriverDTO> getDrivers() {
+        return drivers;
+    }
+
+    public void setDrivers(Set<DriverDTO> drivers) {
+        this.drivers = drivers;
+    }
+
+    public Set<WaypointDTO> getWaypoints() {
+        return waypoints;
+    }
+
+    public void setWaypoints(Set<WaypointDTO> waypoints) {
+        this.waypoints = waypoints;
+    }
+
+    public Integer getWaypointsCount() {
+        return waypointsCount;
+    }
+
+    public void setWaypointsCount(Integer waypointsCount) {
+        this.waypointsCount = waypointsCount;
+    }
+
+    @Override
+    public String toString() {
+        return "OrderDTO{" +
+                "id=" + id +
+                ", completed=" + completed +
+                ", truck=" + truck +
+                ", drivers=" + drivers +
+                ", waypoints=" + waypoints +
+                ", waypointsCount=" + waypointsCount +
+                '}';
+    }
+
 }

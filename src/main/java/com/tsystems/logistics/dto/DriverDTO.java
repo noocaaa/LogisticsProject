@@ -1,6 +1,8 @@
 package com.tsystems.logistics.dto;
 
 import java.util.Set;
+import java.util.HashSet;
+import java.util.List;
 
 public class DriverDTO {
     private Integer id;
@@ -12,6 +14,16 @@ public class DriverDTO {
     private String currentCity;
     private TruckDTO currentTruck;
     private Set<OrderDTO> orders;
+
+    private String truckNumber;
+    private List<String> coDriversId;
+    private String orderNumber;
+    private List<WaypointDTO> waypoints;
+
+    public DriverDTO() {
+        this.currentTruck = null;
+        this.orders = new HashSet<>();
+    }
 
     public Integer getId() {
         return id;
@@ -83,5 +95,37 @@ public class DriverDTO {
 
     public void setOrders(Set<OrderDTO> orders) {
         this.orders = orders;
+    }
+
+    public String getTruckNumber() {
+        return truckNumber;
+    }
+
+    public void setTruckNumber(String truckNumber) {
+        this.truckNumber = truckNumber;
+    }
+
+    public List<String> getCoDrivers() {
+        return coDriversId;
+    }
+
+    public void setCoDrivers(List<String> coDrivers) {
+        this.coDriversId = coDrivers;
+    }
+
+    public String getOrderNumber() {
+        return orderNumber;
+    }
+
+    public void setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
+    }
+
+    public List<WaypointDTO> getWaypoints() {
+        return waypoints;
+    }
+
+    public void setWaypoints(List<WaypointDTO> waypoints) {
+        this.waypoints = waypoints;
     }
 }
