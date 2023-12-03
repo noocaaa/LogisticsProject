@@ -23,17 +23,21 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests((authz) -> authz
                         .requestMatchers("/login", "/css/**").permitAll()
+                        .requestMatchers("/visualizationDriver/**").hasAuthority("ROLE_DRIVER")
+                        .requestMatchers("/**").hasAuthority("ROLE_EMPLOYEE")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/login")
+                        .loginPage("/login").permitAll()
+                        .loginProcessingUrl("/login")
                         .defaultSuccessUrl("/dashboard", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
                         .permitAll()
                         .logoutSuccessUrl("/login")
-                );
+                )
+                .csrf().disable();
 
         return http.build();
     }

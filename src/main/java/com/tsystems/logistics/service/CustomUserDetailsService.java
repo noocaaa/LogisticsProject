@@ -8,6 +8,13 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -19,9 +26,17 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserPrincipal loadUserByUsername(String username) {
+    public UserDetails loadUserByUsername(String username) {
         return userRepository.findByUsername(username)
-                .map(UserPrincipal::new)
+                .map(user -> {
+                    Set<GrantedAuthority> grantedAuthorities = user.getAuthorities()
+                            .stream()
+                            .map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
+                            .collect(Collectors.toSet());
+
+                    return new UserPrincipal(user);
+                })
                 .orElseThrow(() -> new UsernameNotFoundException("Username " + username + " not found"));
     }
+
 }
