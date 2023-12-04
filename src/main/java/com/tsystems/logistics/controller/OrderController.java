@@ -1,10 +1,16 @@
 package com.tsystems.logistics.controller;
 
+import com.tsystems.logistics.dto.DriverDTO;
+import com.tsystems.logistics.dto.TruckDTO;
 import com.tsystems.logistics.dto.OrderDTO;
+
+import com.tsystems.logistics.entities.Driver;
 import com.tsystems.logistics.entities.Order;
 import com.tsystems.logistics.entities.Truck;
 import com.tsystems.logistics.service.OrderService;
 import com.tsystems.logistics.service.TruckService;
+import com.tsystems.logistics.service.DriverService;
+import org.springframework.http.ResponseEntity;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +31,9 @@ public class OrderController {
     @Autowired
     private TruckService truckService;
 
+    @Autowired
+    private DriverService driverService;
+
     @GetMapping
     public String ordersPage(Model model) {
         List<OrderDTO> orderDTOs = orderService.getAllOrderDTOs();
@@ -38,13 +47,6 @@ public class OrderController {
         if (redirectAttributes.containsAttribute("error")) {
             model.addAttribute("error", redirectAttributes.getFlashAttributes().get("error"));
         }
-
-        List<Truck> availableTrucks = truckService.getAllTrucks().stream()
-                .filter(truck -> "OK".equals(truck.getStatus()))
-                .collect(Collectors.toList());
-
-        model.addAttribute("availableTrucks", availableTrucks);
-
         return "addOrder";
     }
 
@@ -61,6 +63,48 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/assignTruck/{orderId}")
+    public ResponseEntity<List<TruckDTO>> showAssignTruckForm(@PathVariable Integer orderId, Model model) {
+        List<Truck> availableTrucks = truckService.getAvailableTrucksForOrder(orderId);
+        List<TruckDTO> truckDTOs = availableTrucks.stream()
+                .map(truckService::convertToDTO)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(truckDTOs);
+    }
+
+    @PostMapping("/assignTruck/{orderId}")
+    public String assignTruckToOrder(@PathVariable Integer orderId, @RequestParam Integer truckId, RedirectAttributes redirectAttributes) {
+        try {
+            orderService.assignTruckToOrder(orderId, truckId);
+            return "redirect:/orders" + orderId;
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/orders" + orderId;
+        }
+    }
+
+    @GetMapping("/assignDriver/{orderId}")
+    public ResponseEntity<List<DriverDTO>>  showAssignDriverForm(@PathVariable Integer orderId, Model model) {
+        Order order = orderService.getOrderById(orderId);
+        OrderDTO orderDTO = orderService.convertOrderToDTO(order);
+        List<DriverDTO> availableDrivers = driverService.getAvailableDriversForOrder(orderDTO, orderDTO.getTruck().getId());
+
+        return ResponseEntity.ok(availableDrivers);
+    }
+
+    @PostMapping("/assignDriver/{orderId}")
+    public String assignDriverToOrder(@PathVariable Integer orderId, @RequestParam List<Integer> driverIds, RedirectAttributes redirectAttributes) {
+        try {
+            orderService.assignDriversToOrder(orderId, driverIds);
+            return "redirect:/orders";
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/orders/assignDriver/" + orderId;
+        }
+    }
+
+
     @GetMapping("/details/{id}")
     public String details(@PathVariable Integer id, Model model) {
         OrderDTO orderDTO = orderService.getOrderDTOById(id);
@@ -68,39 +112,4 @@ public class OrderController {
         model.addAttribute("order", orderDTO);
         return "detailsOrder";
     }
-
-
-    /*@GetMapping
-    public ResponseEntity<List<Order>> getAllOrders() {
-        return ResponseEntity.ok(orderService.getAllOrders());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Order> getOrderById(@PathVariable Integer id) {
-        return ResponseEntity.ok(orderService.getOrderById(id));
-    }
-
-    @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestBody Order order) {
-        return ResponseEntity.ok(orderService.createOrder(order));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Order> updateOrder(@PathVariable Integer id, @RequestBody Order order) {
-        order.setId(id);
-        return ResponseEntity.ok(orderService.updateOrder(order));
-    }
-
-    @PutMapping("/{id}/cancel")
-    public ResponseEntity<Void> cancelOrder(@PathVariable Integer id) {
-        orderService.cancelOrder(id);
-        return ResponseEntity.ok().build();
-    }
-
-    @PutMapping("/{id}/status/{completed}")
-    public ResponseEntity<Void> changeOrderStatus(@PathVariable Integer id, @PathVariable boolean completed) {
-        orderService.changeOrderStatus(id, completed);
-        return ResponseEntity.ok().build();
-    }*/
-
 }

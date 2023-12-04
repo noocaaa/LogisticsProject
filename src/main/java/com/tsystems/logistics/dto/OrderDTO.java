@@ -1,13 +1,15 @@
 package com.tsystems.logistics.dto;
 
+import java.util.List;
 import java.util.Set;
+import java.util.ArrayList;
 
 public class OrderDTO {
     private Integer id;
     private Boolean completed;
     private TruckDTO truck;
     private Set<DriverDTO> drivers;
-    private Set<WaypointDTO> waypoints;
+    private List<WaypointDTO> waypoints  = new ArrayList<>();
 
     private Integer waypointsCount;
 
@@ -43,11 +45,11 @@ public class OrderDTO {
         this.drivers = drivers;
     }
 
-    public Set<WaypointDTO> getWaypoints() {
+    public List<WaypointDTO> getWaypoints() {
         return waypoints;
     }
 
-    public void setWaypoints(Set<WaypointDTO> waypoints) {
+    public void setWaypoints(List<WaypointDTO> waypoints) {
         this.waypoints = waypoints;
     }
 

@@ -6,9 +6,18 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import com.tsystems.logistics.entities.City;
+
 @Repository
 public interface DistanceRepository extends JpaRepository<Distance, Integer> {
 
     // Optional Consulting Methods
     Optional<Distance> findByCity1NameAndCity2Name(String city1Name, String city2Name);
+
+    int findDistanceByCity1_IdAndAndCity2_Id(Integer city1Id, Integer city2Id);
+
+    int findDistanceByCity1AndCity2(City city1, City city2);
 }

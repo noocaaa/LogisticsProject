@@ -1,9 +1,14 @@
 package com.tsystems.logistics.service;
 
-import com.tsystems.logistics.entities.Truck;
+
 import com.tsystems.logistics.entities.Order;
+import com.tsystems.logistics.entities.Truck;
+import com.tsystems.logistics.entities.Cargo;
+import com.tsystems.logistics.entities.Waypoint;
+
 import com.tsystems.logistics.repository.TruckRepository;
 import com.tsystems.logistics.repository.OrderRepository;
+import com.tsystems.logistics.repository.CargoRepository;
 
 import com.tsystems.logistics.dto.TruckDTO;
 
@@ -13,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.HashSet;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +26,7 @@ public class TruckService {
 
     private final TruckRepository truckRepository;
     private final OrderRepository orderRepository;
+    private final CargoRepository cargoRepository;
 
     @Transactional
     public Truck addTruck(Truck truck) {
@@ -112,13 +119,17 @@ public class TruckService {
 
     public TruckDTO convertToDTO(Truck truck) {
         TruckDTO dto = new TruckDTO();
-        dto.setId(truck.getId());
-        dto.setNumber(truck.getNumber());
-        dto.setCapacity(truck.getCapacity());
-        dto.setStatus(truck.getStatus());
-        dto.setCurrentCity(truck.getCurrentCity());
 
-        return dto;
+        if (truck != null) {
+            dto.setId(truck.getId());
+            dto.setNumber(truck.getNumber());
+            dto.setCapacity(truck.getCapacity());
+            dto.setStatus(truck.getStatus());
+            dto.setCurrentCity(truck.getCurrentCity());
+
+            return dto;
+        }
+        return null;
     }
 
     public Truck convertToEntity(TruckDTO truckDTO) {
@@ -135,5 +146,40 @@ public class TruckService {
 
         return truck;
     }
+
+    @Transactional
+    public List<Truck> getAvailableTrucksForOrder(Integer orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+
+        return truckRepository.findAll().stream()
+                .filter(truck -> "OK".equals(truck.getStatus()))
+                .filter(truck -> canTruckHandleOrder(truck, order))
+                .filter(truck -> isTruckAvailable(truck))
+                .collect(Collectors.toList());
+    }
+    private boolean canTruckHandleOrder(Truck truck, Order order) {
+        int totalWeight = 0;
+        for (Waypoint waypoint : order.getWaypoints()) {
+            Cargo cargo = cargoRepository.findById(waypoint.getCargo().getId())
+                    .orElseThrow(() -> new RuntimeException("Cargo not found with id: " + waypoint.getCargo().getId()));
+
+            if ("loading".equals(waypoint.getType())) {
+                totalWeight += cargo.getWeight();
+            } else if ("unloading".equals(waypoint.getType())) {
+                totalWeight -= cargo.getWeight();
+            }
+
+            if (totalWeight > truck.getCapacity()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isTruckAvailable(Truck truck) {
+        return truck.getOrders() == null || truck.getOrders().isEmpty();
+    }
+
 
 }

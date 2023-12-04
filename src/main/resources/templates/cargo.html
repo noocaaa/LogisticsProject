@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Order Details</title>
+    <title>Drivers</title>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
@@ -32,44 +32,42 @@
     </nav>
 
     <div class="content">
-            <h2>Order Details</h2>
+        <h2>Cargo Assignment</h2>
 
-            <p><strong>Order ID:</strong> <span th:text="${order.id}"></span></p>
-            <p><strong>Completed:</strong> <span th:text="${order.completed ? 'Yes' : 'No'}"></span></p>
-            <div th:if="${order.truck != null}">
-                <p><strong>Truck Number:</strong> <span th:text="${order.truck.id}"></span></p>
-            </div>
+        <div th:if="${error}" class="alert alert-danger">
+            <p th:text="${error}"></p>
+        </div>
 
-            <div th:if="${order.drivers != null and !order.drivers.isEmpty()}">
-                <h3>Assigned Drivers</h3>
-                <ul>
-                    <li th:each="driver : ${order.drivers}">
-                        <span th:text="${driver.name} + ' ' + ${driver.surname}"></span>
-                    </li>
-                </ul>
-            </div>
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Weight</th>
+                <th>Status</th>
+                <th>Assign to Order</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="cargo : ${cargos}">
+                <td th:text="${cargo.id}"></td>
+                <td th:text="${cargo.name}"></td>
+                <td th:text="${cargo.weight}"></td>
+                <td th:text="${cargo.status}"></td>
+                <td>
+                    <form th:action="@{/cargos/assignCargoToOrder}" method="post">
+                        <input type="hidden" name="cargoId" th:value="${cargo.id}">
+                        <select name="orderId">
+                            <option th:each="order : ${orders}" th:value="${order.id}" th:text="${order.getId()}"></option>
+                        </select>
+                        <button type="submit" class="btn btn-primary btn-sm">Assign</button>
+                    </form>
+                </td>
+            </tr>
 
-            <div th:if="${order.waypoints != null and !order.waypoints.isEmpty()}">
-                <h3>Waypoints</h3>
-                <table class="table table-hover">
-                    <thead>
-                    <tr>
-                        <th>City</th>
-                        <th>Cargo</th>
-                        <th>Type</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="waypoint : ${order.waypoints}">
-                        <td th:text="${waypoint.getCityId()}"></td>
-                        <td th:text="${waypoint.cargoId}"></td>
-                        <td th:text="${waypoint.type}"></td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
+            </tbody>
+        </table>
     </div>
-
 </div>
 </body>
 </html>

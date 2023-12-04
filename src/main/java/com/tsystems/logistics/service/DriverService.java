@@ -1,11 +1,16 @@
 package com.tsystems.logistics.service;
 
+import com.tsystems.logistics.entities.Waypoint;
 import com.tsystems.logistics.entities.Driver;
 import com.tsystems.logistics.entities.Truck;
 import com.tsystems.logistics.repository.DriverRepository;
 import com.tsystems.logistics.repository.OrderRepository;
 import com.tsystems.logistics.repository.WaypointRepository;
 import com.tsystems.logistics.repository.TruckRepository;
+import com.tsystems.logistics.repository.DistanceRepository;
+
+import org.hibernate.Hibernate;
+
 import com.tsystems.logistics.dto.DriverDTO;
 import com.tsystems.logistics.dto.WaypointDTO;
 import java.util.stream.Collectors;
@@ -20,9 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +35,7 @@ public class DriverService {
     private final TruckRepository truckRepository;
     private final WaypointRepository waypointRepository;
     private final OrderRepository orderRepository;
+    private final DistanceRepository distanceRepository;
 
     private final TruckService truckService;
 
@@ -335,8 +339,48 @@ public class DriverService {
         }
     }
 
+    @Transactional
+    public List<DriverDTO> getAvailableDriversForOrder(OrderDTO order, Integer truckId) {
+        Truck truck = truckService.getTruckById(truckId);
 
+        Hibernate.initialize(order.getWaypoints());
 
+        int travelTime = calculateTravelTime(order);
+
+        return driverRepository.findAll().stream()
+                .filter(driver -> isDriverAvailable(driver, travelTime))
+                .filter(driver -> "REST".equals(driver.getStatus()))
+                .filter(driver -> driver.getCurrentCity().equals(truck.getCurrentCity()))
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private int calculateTravelTime(OrderDTO order) {
+        int totalTime = 0;
+
+        List<WaypointDTO> waypoints = new ArrayList<>(order.getWaypoints());
+        waypoints.sort(Comparator.comparing(WaypointDTO::getId));
+
+        for (int i = 0; i < waypoints.size() - 1; i++) {
+            WaypointDTO start = waypoints.get(i);
+            WaypointDTO end = waypoints.get(i + 1);
+            int distance = distanceRepository.findDistanceByCity1_IdAndAndCity2_Id(start.getCityId(), end.getCityId());
+            totalTime += calculateTimeFromDistance(distance);
+            totalTime += 30;
+        }
+
+        return totalTime;
+    }
+
+    private int calculateTimeFromDistance(int distance) {
+        int averageSpeed = 120;
+        return (distance / averageSpeed) * 60;
+    }
+
+    private boolean isDriverAvailable(Driver driver, int travelTime) {
+        int totalHours = driver.getWorkingHours() + (travelTime / 60);
+        return totalHours <= 176;
+    }
 
 }
 

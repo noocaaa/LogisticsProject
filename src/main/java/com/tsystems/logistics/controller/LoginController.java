@@ -4,7 +4,6 @@ import com.tsystems.logistics.service.UserService;
 import com.tsystems.logistics.entities.Waypoint;
 import com.tsystems.logistics.entities.Cargo;
 import com.tsystems.logistics.entities.Order;
-import com.tsystems.logistics.dto.WaypointDTO;
 
 import com.tsystems.logistics.dto.DriverDTO;
 
@@ -13,7 +12,6 @@ import com.tsystems.logistics.service.CargoService;
 import com.tsystems.logistics.service.DriverService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;

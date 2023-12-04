@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.Optional;
 
+import com.tsystems.logistics.dto.CargoDTO;
+
 @Service
 @RequiredArgsConstructor
 public class CargoService {
@@ -103,5 +105,19 @@ public class CargoService {
     public int cargoByStatus(String status) {
         return cargoRepository.countByStatus(status);
     }
+
+    public CargoDTO convertToDTO(Cargo cargo) {
+        return new CargoDTO(cargo.getId(), cargo.getName(), cargo.getWeight(), cargo.getStatus());
+    }
+
+    public Cargo convertToEntity(CargoDTO cargoDTO) {
+        Cargo cargo = new Cargo();
+        cargo.setId(cargoDTO.getId());
+        cargo.setName(cargoDTO.getName());
+        cargo.setWeight(cargoDTO.getWeight());
+        cargo.setStatus(cargoDTO.getStatus());
+        return cargo;
+    }
+
 
 }

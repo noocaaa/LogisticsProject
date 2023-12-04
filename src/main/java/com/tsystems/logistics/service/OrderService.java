@@ -48,11 +48,13 @@ public class OrderService {
     @Transactional
     public Order createOrder(Order order) {
 
-        validateTruckForOrder(order.getTruck());
-        validateDriversForOrder(order.getDrivers());
-
-        // Check Waypoints
-        validateWaypointsForOrder(order.getWaypoints());
+        if (order.getTruck() != null) {
+            validateTruckForOrder(order.getTruck());
+        } else if (order.getDrivers() != null) {
+            validateDriversForOrder(order.getDrivers());
+        } else if (order.getWaypoints() != null) {
+            validateWaypointsForOrder(order.getWaypoints());
+        }
 
         return orderRepository.save(order);
     }
@@ -99,8 +101,12 @@ public class OrderService {
 
     @Transactional
     public Order getOrderById(Integer id) {
-        return orderRepository.findById(id)
+        Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+        Hibernate.initialize(order.getTruck());
+        Hibernate.initialize(order.getDrivers());
+        Hibernate.initialize(order.getWaypoints());
+        return order;
     }
 
     @Transactional
@@ -181,7 +187,9 @@ public class OrderService {
         Order order = new Order();
         order.setId(dto.getId());
         order.setCompleted(dto.getCompleted());
-        order.setTruck(truckService.convertToEntity(dto.getTruck()));
+        if (dto.getTruck() != null) {
+            order.setTruck(truckService.convertToEntity(dto.getTruck()));
+        }
         return order;
     }
 
@@ -191,7 +199,9 @@ public class OrderService {
         dto.setCompleted(order.getCompleted());
         dto.setTruck(truckService.convertToDTO(order.getTruck()));
         dto.setDrivers(order.getDrivers().stream().map(driverService::convertToDTO).collect(Collectors.toSet()));
-        dto.setWaypoints(order.getWaypoints().stream().map(waypointService::convertToDTO).collect(Collectors.toSet()));
+        dto.setWaypoints(order.getWaypoints().stream()
+                .map(waypointService::convertToDTO)
+                .collect(Collectors.toList()));
         dto.setWaypointsCount(order.getWaypoints().size());
         return dto;
     }
@@ -236,15 +246,17 @@ public class OrderService {
         Hibernate.initialize(order.getTruck());
         Hibernate.initialize(order.getWaypoints());
 
-        List<Driver> driversForTruck = driverRepository.findByCurrentTruckId(order.getTruck().getId());
-
         OrderDTO orderDTO = convertOrderToDTO(order);
 
-        Set<DriverDTO> driverDTOs = driversForTruck.stream().map(driverService::convertToDTO).collect(Collectors.toSet());
-        orderDTO.setDrivers(driverDTOs);
+        if (order.getTruck() != null ) {
+            List<Driver> driversForTruck = driverRepository.findByCurrentTruckId(order.getTruck().getId());
+            Set<DriverDTO> driverDTOs = driversForTruck.stream().map(driverService::convertToDTO).collect(Collectors.toSet());
+            orderDTO.setDrivers(driverDTOs);
+        }
 
         return orderDTO;
     }
+
 
     @Transactional
     public boolean checkAndUpdateOrderStatus(Integer orderId) {
@@ -262,4 +274,30 @@ public class OrderService {
 
         return allCargosDelivered;
     }
+
+    @Transactional
+    public void assignTruckToOrder(Integer orderId, Integer truckId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        Truck truck = truckRepository.findById(truckId)
+                .orElseThrow(() -> new RuntimeException("Truck not found with id: " + truckId));
+
+        order.setTruck(truck);
+        orderRepository.save(order);
+    }
+
+    @Transactional
+    public void assignDriversToOrder(Integer orderId, List<Integer> driverIds) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+
+        Set<Driver> drivers = driverIds.stream()
+                .map(driverId -> driverRepository.findById(driverId)
+                        .orElseThrow(() -> new RuntimeException("Driver not found with id: " + driverId)))
+                .collect(Collectors.toSet());
+
+        order.setDrivers(drivers);
+        orderRepository.save(order);
+    }
+
 }
