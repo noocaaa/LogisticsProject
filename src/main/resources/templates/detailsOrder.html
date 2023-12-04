@@ -61,9 +61,9 @@
                     </thead>
                     <tbody>
                     <tr th:each="waypoint : ${order.waypoints}">
-                        <td th:text="${waypoint.getCityId()}"></td>
-                        <td th:text="${waypoint.cargoId}"></td>
-                        <td th:text="${waypoint.type}"></td>
+                        <td th:text="${waypoint.getCityName()}"></td>
+                        <td th:text="${waypoint.getCargoId()}"></td>
+                        <td th:text="${waypoint.getType()}"></td>
                     </tr>
                     </tbody>
                 </table>

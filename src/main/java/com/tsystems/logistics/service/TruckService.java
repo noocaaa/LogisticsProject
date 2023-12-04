@@ -159,27 +159,27 @@ public class TruckService {
                 .collect(Collectors.toList());
     }
     private boolean canTruckHandleOrder(Truck truck, Order order) {
-        int totalWeight = 0;
+        int maxNetWeight = 0;
+        int currentWeight = 0;
+
         for (Waypoint waypoint : order.getWaypoints()) {
             Cargo cargo = cargoRepository.findById(waypoint.getCargo().getId())
                     .orElseThrow(() -> new RuntimeException("Cargo not found with id: " + waypoint.getCargo().getId()));
 
             if ("loading".equals(waypoint.getType())) {
-                totalWeight += cargo.getWeight();
+                currentWeight += cargo.getWeight();
             } else if ("unloading".equals(waypoint.getType())) {
-                totalWeight -= cargo.getWeight();
+                currentWeight -= cargo.getWeight();
             }
 
-            if (totalWeight > truck.getCapacity()) {
-                return false;
-            }
+            maxNetWeight = Math.max(maxNetWeight, currentWeight);
         }
-        return true;
+
+        return maxNetWeight <= truck.getCapacity();
     }
 
     private boolean isTruckAvailable(Truck truck) {
         return truck.getOrders() == null || truck.getOrders().isEmpty();
     }
-
 
 }

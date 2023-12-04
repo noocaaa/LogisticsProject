@@ -107,6 +107,7 @@ public class WaypointService {
         dto.setId(waypoint.getId());
         dto.setOrderId(waypoint.getOrder().getId());
         dto.setCityId(waypoint.getCity().getId());
+        dto.setCityName(waypoint.getCity().getName());
         dto.setCargoId(waypoint.getCargo().getId());
         dto.setType(waypoint.getType());
 

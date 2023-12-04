@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.tsystems.logistics.dto.CargoDTO;
 
@@ -53,7 +54,6 @@ public class CargoService {
         Cargo existingCargo = cargoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cargo not found with id: " + id));
 
-        // Before deleting, we should check that the cargo is not assigned.
         if (!existingCargo.getWaypoints().isEmpty()) {
             throw new RuntimeException("Cargo is currently assigned and cannot be deleted.");
         }
@@ -72,6 +72,12 @@ public class CargoService {
                 .orElseThrow(() -> new RuntimeException("Cargo not found with id: " + id));
     }
 
+    public List<Cargo> getAvailableCargos() {
+        return cargoRepository.findAll().stream()
+                .filter(cargo -> "ready".equals(cargo.getStatus()))
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public void assignCargoToOrder(Integer cargoId, Integer orderId) {
 
@@ -80,7 +86,6 @@ public class CargoService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
 
-        // Check cargo and order status
         if (!"ready".equals(cargo.getStatus())) {
             throw new RuntimeException("Cargo is not ready to be shipped.");
         }
@@ -89,13 +94,11 @@ public class CargoService {
             throw new RuntimeException("Order is already completed.");
         }
 
-        // Add the cargo to the order
         Waypoint newWaypoint = new Waypoint();
         newWaypoint.setCargo(cargo);
         newWaypoint.setOrder(order);
         order.getWaypoints().add(newWaypoint);
 
-        // Update cargo status
         cargo.setStatus("shipped");
         cargoRepository.save(cargo);
 
@@ -117,6 +120,12 @@ public class CargoService {
         cargo.setWeight(cargoDTO.getWeight());
         cargo.setStatus(cargoDTO.getStatus());
         return cargo;
+    }
+
+    public List<CargoDTO> convertToDTOList(List<Cargo> cargos) {
+        return cargos.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
 

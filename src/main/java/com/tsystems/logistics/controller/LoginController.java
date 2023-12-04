@@ -113,7 +113,7 @@ public class LoginController {
         try {
             String username = principal.getName();
             Integer driverId = driverService.getDriverByUsername(username).getId();
-            System.out.println(status);
+
             if (status.equals("Behind the wheel")) {
                 status = "DRIVING";
             } else if (status.equals("Rest")) {

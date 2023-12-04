@@ -1,6 +1,6 @@
 package com.tsystems.logistics.service;
 
-import com.tsystems.logistics.entities.Waypoint;
+import com.tsystems.logistics.entities.Distance;
 import com.tsystems.logistics.entities.Driver;
 import com.tsystems.logistics.entities.Truck;
 import com.tsystems.logistics.repository.DriverRepository;
@@ -13,6 +13,9 @@ import org.hibernate.Hibernate;
 
 import com.tsystems.logistics.dto.DriverDTO;
 import com.tsystems.logistics.dto.WaypointDTO;
+
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.stream.Collectors;
 import java.util.Collections;
 import java.time.Instant;
@@ -39,6 +42,7 @@ public class DriverService {
 
     private final TruckService truckService;
 
+    private final int AVERAGE_SPEED = 100;
     private final int MAX_WORKING_HOURS = 176;
     private final List<String> validStatuses = Arrays.asList("REST", "DRIVING", "SECOND_DRIVER", "LOADING_UNLOADING" );
 
@@ -339,21 +343,39 @@ public class DriverService {
         }
     }
 
+
     @Transactional
     public List<DriverDTO> getAvailableDriversForOrder(OrderDTO order, Integer truckId) {
         Truck truck = truckService.getTruckById(truckId);
-
-        Hibernate.initialize(order.getWaypoints());
-
         int travelTime = calculateTravelTime(order);
 
+        LocalDate today = LocalDate.now();
+        LocalDate endOfMonth = today.withDayOfMonth(today.lengthOfMonth());
+        long remainingDaysInMonth = ChronoUnit.DAYS.between(today, endOfMonth);
+
         return driverRepository.findAll().stream()
-                .filter(driver -> isDriverAvailable(driver, travelTime))
+                .filter(driver -> isDriverAvailable(driver, travelTime, remainingDaysInMonth))
                 .filter(driver -> "REST".equals(driver.getStatus()))
                 .filter(driver -> driver.getCurrentCity().equals(truck.getCurrentCity()))
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
+
+    private boolean isDriverAvailable(Driver driver, int travelTime, long remainingDaysInMonth) {
+        int travelHours = travelTime / 60;
+        int hoursThisMonth = driver.getWorkingHours();
+        int hoursNextMonth = 0;
+
+        if (travelHours > remainingDaysInMonth * 24) {
+            hoursThisMonth += remainingDaysInMonth * 24;
+            hoursNextMonth += travelHours - remainingDaysInMonth * 24;
+        } else {
+            hoursThisMonth += travelHours;
+        }
+
+        return hoursThisMonth <= 176 && hoursNextMonth <= 176;
+    }
+
 
     private int calculateTravelTime(OrderDTO order) {
         int totalTime = 0;
@@ -364,7 +386,8 @@ public class DriverService {
         for (int i = 0; i < waypoints.size() - 1; i++) {
             WaypointDTO start = waypoints.get(i);
             WaypointDTO end = waypoints.get(i + 1);
-            int distance = distanceRepository.findDistanceByCity1_IdAndAndCity2_Id(start.getCityId(), end.getCityId());
+            Distance distanceEntity = distanceRepository.findDistanceByCity1_IdAndAndCity2_Id(start.getCityId(), end.getCityId());
+            int distance = distanceEntity.getDistance();
             totalTime += calculateTimeFromDistance(distance);
             totalTime += 30;
         }
@@ -373,8 +396,7 @@ public class DriverService {
     }
 
     private int calculateTimeFromDistance(int distance) {
-        int averageSpeed = 120;
-        return (distance / averageSpeed) * 60;
+        return (distance / AVERAGE_SPEED) * 60;
     }
 
     private boolean isDriverAvailable(Driver driver, int travelTime) {

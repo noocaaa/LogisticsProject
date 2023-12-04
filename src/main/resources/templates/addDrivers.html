@@ -58,18 +58,26 @@
       </div>
 
       <div class="form-group">
-        <label for="workingHours">Working Hours:</label>
+        <label for="workingHours">Month Working Hours:</label>
         <input type="number" class="form-control" id="workingHours" name="workingHours" required>
       </div>
 
       <div class="form-group">
         <label for="status">Status:</label>
-        <input type="text" class="form-control" id="status" name="status" required>
+        <select class="form-control" id="status" name="status" required>
+          <option value="REST">REST</option>
+          <option value="DRIVING">DRIVING</option>
+          <option value="SECOND_DRIVER">SECOND_DRIVER</option>
+          <option value="LOADING_UNLOADING">LOADING_UNLOADING</option>
+        </select>
       </div>
+
 
       <div class="form-group">
         <label for="currentCity">Current City:</label>
-        <input type="text" class="form-control" id="currentCity" name="currentCity" required>
+        <select class="form-control" id="currentCity" name="currentCity" required>
+          <option th:each="city : ${cities}" th:value="${city.name}" th:text="${city.name}">City Name</option>
+        </select>
       </div>
 
       <button type="submit" class="btn btn-primary">Add Driver</button>

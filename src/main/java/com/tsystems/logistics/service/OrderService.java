@@ -1,29 +1,23 @@
 package com.tsystems.logistics.service;
 
-import com.tsystems.logistics.entities.Order;
-import com.tsystems.logistics.entities.Truck;
-import com.tsystems.logistics.entities.Driver;
-import com.tsystems.logistics.entities.Waypoint;
-import com.tsystems.logistics.entities.Cargo;
+
+import com.tsystems.logistics.entities.*;
 import com.tsystems.logistics.dto.OrderDTO;
 import com.tsystems.logistics.dto.DriverDTO;
 import com.tsystems.logistics.dto.WaypointDTO;
 
+import com.tsystems.logistics.repository.*;
 import org.hibernate.Hibernate;
 
 import java.util.stream.Collectors;
 import java.util.Set;
-
-import com.tsystems.logistics.repository.OrderRepository;
-import com.tsystems.logistics.repository.TruckRepository;
-import com.tsystems.logistics.repository.DriverRepository;
 
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -35,11 +29,13 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final TruckRepository truckRepository;
     private final DriverRepository driverRepository;
+    private final CityRepository cityRepository;
+    private final CargoRepository cargoRepository;
+    private final DriversorderRepository driversorderRepository;
 
     private final TruckService truckService;
     private final DriverService driverService;
     private final WaypointService waypointService;
-
 
     private Set<Waypoint> waypoints;
 
@@ -50,10 +46,18 @@ public class OrderService {
 
         if (order.getTruck() != null) {
             validateTruckForOrder(order.getTruck());
-        } else if (order.getDrivers() != null) {
+        }
+
+        if (order.getDrivers() != null) {
             validateDriversForOrder(order.getDrivers());
-        } else if (order.getWaypoints() != null) {
+        }
+
+        if (order.getWaypoints() != null) {
             validateWaypointsForOrder(order.getWaypoints());
+
+            for (Waypoint waypoint : order.getWaypoints()) {
+                waypoint.setOrder(order);
+            }
         }
 
         return orderRepository.save(order);
@@ -106,6 +110,15 @@ public class OrderService {
         Hibernate.initialize(order.getTruck());
         Hibernate.initialize(order.getDrivers());
         Hibernate.initialize(order.getWaypoints());
+        Hibernate.initialize(order.getWaypoints());
+
+        for (Waypoint waypoint : order.getWaypoints()) {
+            Hibernate.initialize(waypoint.getCargo());
+            if (waypoint.getCargo() != null) {
+                Hibernate.initialize(waypoint.getCity().getName());
+            }
+        }
+
         return order;
     }
 
@@ -144,32 +157,20 @@ public class OrderService {
             throw new RuntimeException("Order must have at least one waypoint.");
         }
 
-        Map<Cargo, Long> cargoLoadingCount = waypoints.stream()
-                .filter(w -> "loading".equals(w.getType()))
-                .map(Waypoint::getCargo)
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        Set<Integer> cargosLoaded = waypoints.stream()
+                .filter(w -> "loading".equalsIgnoreCase(w.getType()))
+                .map(w -> w.getCargo().getId())
+                .collect(Collectors.toSet());
 
-        Map<Cargo, Long> cargoUnloadingCount = waypoints.stream()
-                .filter(w -> "unloading".equals(w.getType()))
-                .map(Waypoint::getCargo)
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        Set<Integer> cargosUnloaded = waypoints.stream()
+                .filter(w -> "unloading".equalsIgnoreCase(w.getType()))
+                .map(w -> w.getCargo().getId())
+                .collect(Collectors.toSet());
 
-        for (Cargo cargo : cargoLoadingCount.keySet()) {
-            long loadingCount = cargoLoadingCount.getOrDefault(cargo, 0L);
-            long unloadingCount = cargoUnloadingCount.getOrDefault(cargo, 0L);
-
-            if (loadingCount != unloadingCount) {
-                throw new RuntimeException("Mismatch in loading and unloading counts for cargo: " + cargo.getId());
-            }
-        }
-
-        for (Cargo cargo : cargoUnloadingCount.keySet()) {
-            if (!cargoLoadingCount.containsKey(cargo)) {
-                throw new RuntimeException("Cargo unloaded without being loaded: " + cargo.getId());
-            }
+        if (!cargosLoaded.equals(cargosUnloaded)) {
+            throw new RuntimeException("Mismatch in loading and unloading for cargos.");
         }
     }
-
 
     public int getTotalNumberOfOrders() {
         return (int) orderRepository.count();
@@ -187,11 +188,35 @@ public class OrderService {
         Order order = new Order();
         order.setId(dto.getId());
         order.setCompleted(dto.getCompleted());
+
         if (dto.getTruck() != null) {
             order.setTruck(truckService.convertToEntity(dto.getTruck()));
         }
+
+        if (dto.getWaypoints() != null && !dto.getWaypoints().isEmpty()) {
+            Set<Waypoint> waypoints = new HashSet<>();
+            for (WaypointDTO waypointDTO : dto.getWaypoints()) {
+                Waypoint waypoint = new Waypoint();
+
+                waypoint.setOrder(order);
+
+                City city = cityRepository.findById(waypointDTO.getCityId())
+                        .orElseThrow(() -> new RuntimeException("City not found"));
+                Cargo cargo = cargoRepository.findById(waypointDTO.getCargoId())
+                        .orElseThrow(() -> new RuntimeException("Cargo not found"));
+
+                waypoint.setCity(city);
+                waypoint.setCargo(cargo);
+                waypoint.setType(waypointDTO.getType());
+
+                waypoints.add(waypoint);
+            }
+            order.setWaypoints(waypoints);
+        }
+
         return order;
     }
+
 
     public OrderDTO convertOrderToDTO(Order order) {
         OrderDTO dto = new OrderDTO();
@@ -291,13 +316,35 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
 
+        Integer truckId = order.getTruck().getId();
+
         Set<Driver> drivers = driverIds.stream()
-                .map(driverId -> driverRepository.findById(driverId)
-                        .orElseThrow(() -> new RuntimeException("Driver not found with id: " + driverId)))
+                .map(driverId -> {
+                    Driver driver = driverRepository.findById(driverId)
+                            .orElseThrow(() -> new RuntimeException("Driver not found with id: " + driverId));
+                    driver.setCurrentTruck(order.getTruck());
+                    return driver;
+                })
                 .collect(Collectors.toSet());
 
         order.setDrivers(drivers);
+
+        for (Driver driver : drivers) {
+            driverRepository.save(driver);
+
+            DriversorderId driversorderId = new DriversorderId(driver.getId(), orderId);
+
+            Driversorder driversorder = new Driversorder();
+            driversorder.setId(driversorderId);
+            driversorder.setDriver(driver);
+            driversorder.setOrder(order);
+
+            driversorderRepository.save(driversorder);
+        }
+
         orderRepository.save(order);
     }
+
+
 
 }

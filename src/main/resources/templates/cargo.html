@@ -60,7 +60,7 @@
                         <select name="orderId">
                             <option th:each="order : ${orders}" th:value="${order.id}" th:text="${order.getId()}"></option>
                         </select>
-                        <button type="submit" class="btn btn-primary btn-sm">Assign</button>
+                        <button type="submit" class="btn btn-primary btn-sm" style="background-color: green">Assign</button>
                     </form>
                 </td>
             </tr>

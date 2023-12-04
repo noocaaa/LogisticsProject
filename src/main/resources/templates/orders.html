@@ -48,7 +48,7 @@
                 <th>Waypoints Count</th>
                 <th>Drivers</th>
                 <th>Truck Number</th>
-
+                <th>Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -57,11 +57,11 @@
                 <td th:text="${order.completed ? 'Yes' : 'No'}"></td>
                 <td th:text="${order.getWaypointsCount()}"></td>
                 <td>
-                    <div th:if="${order.drivers.isEmpty() != null}">
+                    <div th:if="${order.getDrivers().size() != 0 or order.getCompleted()}">
                         <span th:text="${order.getDrivers().size()}"></span>
                     </div>
-                    <div th:if="${order.truck != null and !order.completed and order.drivers.isEmpty()}">
-                        <button type="button" class="btn btn-primary" th:onclick="'loadDrivers(' + ${order.id} + ')'">
+                    <div th:if="${order.getTruck() != null and !order.getCompleted() and order.getDrivers().size() == 0 }">
+                        <button type="button" class="btn btn-primary" style="background-color: green" th:attr="data-orderid=${order.id}" th:onclick="'loadDrivers(' + ${order.id} + ')'">
                             Assign Drivers
                         </button>
                     </div>
@@ -71,7 +71,7 @@
                         <span th:text="${order.getTruck().getId()}"></span>
                     </div>
                     <div th:if="${order.getTruck() == null}">
-                        <button type="button" class="btn btn-primary" th:onclick="'loadTrucks(' + ${order.id} + ')'">
+                        <button type="button" class="btn btn-primary" style="background-color: green" th:attr="data-orderid=${order.id}" th:onclick="'loadTrucks(' + ${order.id} + ')'">
                             Assign Truck
                         </button>
                     </div>
@@ -122,7 +122,7 @@
                 </div>
                 <div class="modal-body">
                     <form th:action="@{/orders/assignDriver/{orderId}(orderId=${order.id})}" method="post">
-                        <select name="driverId">
+                        <select name="driverIds" multiple>
                             <option value="">Select Driver</option>
                             <option th:each="driver : ${driverDTOs}"
                                     th:value="${driver.id}"
@@ -139,11 +139,31 @@
 </body>
 
 <script>
+    $(document).ready(function() {
+        $('.assignTruckBtn').each(function() {
+            Co
+            var orderId = $(this).data('orderid');
+
+            $('#assignTruckModal' + orderId).on('hidden.bs.modal', function () {
+                var truckSelect = $('#assignTruckModal' + orderId).find('select[name="truckId"]');
+                truckSelect.empty();
+                truckSelect.append('<option value="">Select Truck</option>');
+            });
+
+            $('#assignDriverModal' + orderId).on('hidden.bs.modal', function () {
+                var driverSelect = $('#assignDriverModal' + orderId).find('select[name="driverId"]');
+                driverSelect.empty();
+                driverSelect.append('<option value="">Select Driver</option>');
+            });
+        });
+    });
+
     function loadTrucks(orderId) {
         $.ajax({
             url: '/orders/assignTruck/' + orderId,
             type: 'GET',
             success: function(trucks) {
+                console.log(trucks)
                 fillTruckModal(trucks, orderId);
             },
             error: function(error) {
@@ -178,15 +198,15 @@
     }
 
     function fillDriver(drivers, orderId) {
-        var modal = $('#assignDriverModal' + orderId);
-        var driverSelect = modal.find('select[name="driverId"]');
+        var modal2 = $('#assignDriverModal' + orderId);
+        var driverSelect = modal2.find('select[name="driverIds"]');
         driverSelect.empty();
 
         drivers.forEach(function(driver) {
             driverSelect.append(new Option(driver.name + ' ' + driver.surname, driver.id));
         });
 
-        modal.modal('show');
+        modal2.modal('show');
     }
 
 </script>

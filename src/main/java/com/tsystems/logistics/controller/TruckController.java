@@ -1,7 +1,11 @@
 package com.tsystems.logistics.controller;
 
+import com.tsystems.logistics.dto.CityDTO;
+import com.tsystems.logistics.entities.City;
 import com.tsystems.logistics.entities.Truck;
 import com.tsystems.logistics.service.TruckService;
+import com.tsystems.logistics.service.CityService;
+
 import com.tsystems.logistics.dto.TruckDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +18,7 @@ import  org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/trucks")
@@ -21,6 +26,9 @@ public class TruckController {
 
     @Autowired
     private TruckService truckService;
+
+    @Autowired
+    private CityService cityService;
 
     @GetMapping
     public String trucksPage(Model model) {
@@ -38,6 +46,12 @@ public class TruckController {
         if (redirectAttributes.containsAttribute("error")) {
             model.addAttribute("error", redirectAttributes.getFlashAttributes().get("error"));
         }
+
+        List<City> cities = cityService.getAllCities();
+        List<CityDTO> cityDTOs = cities.stream()
+                .map(city -> new CityDTO(city.getId(), city.getName()))
+                .collect(Collectors.toList());
+        model.addAttribute("cities", cityDTOs);
 
         return "editTruck";
     }
@@ -66,6 +80,13 @@ public class TruckController {
         if (redirectAttributes.containsAttribute("error")) {
             model.addAttribute("error", redirectAttributes.getFlashAttributes().get("error"));
         }
+
+        List<City> cities = cityService.getAllCities();
+        List<CityDTO> cityDTOs = cities.stream()
+                .map(city -> new CityDTO(city.getId(), city.getName()))
+                .collect(Collectors.toList());
+        model.addAttribute("cities", cityDTOs);
+
         return "addTruck";
     }
 
@@ -81,14 +102,4 @@ public class TruckController {
             return "redirect:/trucks/add";
         }
     }
-
-    /*
-    @PutMapping("/{truckId}/assign/{orderId}")
-    public ResponseEntity<Void> assignTruckToOrder(
-            @PathVariable Integer truckId,
-            @PathVariable Integer orderId
-    ) {
-        truckService.assignTruckToOrder(truckId, orderId);
-        return ResponseEntity.ok().build();
-    }*/
 }
