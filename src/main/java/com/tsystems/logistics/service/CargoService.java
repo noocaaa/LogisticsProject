@@ -11,6 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
+import com.tsystems.logistics.exception.CargoAlreadyExistsException;
+import com.tsystems.logistics.exception.CargoNotFoundException;
+import com.tsystems.logistics.exception.CargoAssignmentException;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -29,7 +33,7 @@ public class CargoService {
         Optional<Cargo> existingCargo = cargoRepository.findById(cargo.getId());
 
         if (existingCargo != null) {
-            throw new RuntimeException("A cargo with the same number already exists.");
+            throw new CargoAlreadyExistsException("A cargo with the same number already exists.");
         }
 
         return cargoRepository.save(cargo);
@@ -39,7 +43,7 @@ public class CargoService {
     public Cargo updateCargo(Cargo cargo) {
 
         Cargo existingCargo = cargoRepository.findById(cargo.getId())
-                .orElseThrow(() -> new RuntimeException("Cargo not found with id: " + cargo.getId()));
+                .orElseThrow(() -> new CargoNotFoundException("Cargo not found with id: " + cargo.getId()));
 
         existingCargo.setName(cargo.getName());
         existingCargo.setWeight(cargo.getWeight());
@@ -52,10 +56,10 @@ public class CargoService {
     public void deleteCargo(Integer id) {
 
         Cargo existingCargo = cargoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cargo not found with id: " + id));
+                .orElseThrow(() -> new CargoNotFoundException("Cargo not found with id: " + id));
 
         if (!existingCargo.getWaypoints().isEmpty()) {
-            throw new RuntimeException("Cargo is currently assigned and cannot be deleted.");
+            throw new CargoAssignmentException("Cargo is currently assigned and cannot be deleted.");
         }
 
         cargoRepository.deleteById(id);
@@ -69,7 +73,7 @@ public class CargoService {
     public Cargo getCargoById(Integer id) {
 
         return cargoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cargo not found with id: " + id));
+                .orElseThrow(() -> new CargoNotFoundException("Cargo not found with id: " + id));
     }
 
     public List<Cargo> getAvailableCargos() {
@@ -82,16 +86,16 @@ public class CargoService {
     public void assignCargoToOrder(Integer cargoId, Integer orderId) {
 
         Cargo cargo = cargoRepository.findById(cargoId)
-                .orElseThrow(() -> new RuntimeException("Cargo not found with id: " + cargoId));
+                .orElseThrow(() ->  new CargoNotFoundException("Cargo not found with id: " + cargoId));
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() ->  new CargoNotFoundException("Order not found with id: " + orderId));
 
         if (!"ready".equals(cargo.getStatus())) {
-            throw new RuntimeException("Cargo is not ready to be shipped.");
+            throw new CargoAssignmentException("Cargo is not ready to be shipped.");
         }
 
         if (order.getCompleted()) {
-            throw new RuntimeException("Order is already completed.");
+            throw new CargoAssignmentException("Order is already completed.");
         }
 
         Waypoint newWaypoint = new Waypoint();

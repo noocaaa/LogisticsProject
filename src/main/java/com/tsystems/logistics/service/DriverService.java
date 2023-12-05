@@ -3,6 +3,10 @@ package com.tsystems.logistics.service;
 import com.tsystems.logistics.entities.Distance;
 import com.tsystems.logistics.entities.Driver;
 import com.tsystems.logistics.entities.Truck;
+import com.tsystems.logistics.exception.DriverAlreadyExistsException;
+import com.tsystems.logistics.exception.DriverAssignmentException;
+import com.tsystems.logistics.exception.DriverNotFoundException;
+import com.tsystems.logistics.exception.InvalidDriverStatusException;
 import com.tsystems.logistics.repository.DriverRepository;
 import com.tsystems.logistics.repository.OrderRepository;
 import com.tsystems.logistics.repository.WaypointRepository;
@@ -50,15 +54,15 @@ public class DriverService {
     public Driver addDriver(Driver driver) {
         driverRepository.findByPersonalNumber(driver.getPersonalNumber())
                 .ifPresent(s -> {
-                    throw new RuntimeException("Personal number already in use.");
+                    throw new DriverAlreadyExistsException("Personal number already in use.");
                 });
 
         if (!validStatuses.contains(driver.getStatus())) {
-            throw new RuntimeException("Invalid status, must be a valid type.");
+            throw new InvalidDriverStatusException("Invalid status, must be a valid type.");
         }
 
         if (!driver.getPersonalNumber().matches("\\d+")) {
-            throw new RuntimeException("Personal number should only contain numbers.");
+            throw new InvalidDriverStatusException("Personal number should only contain numbers.");
         }
 
         return driverRepository.save(driver);
@@ -67,25 +71,25 @@ public class DriverService {
     @Transactional
     public Driver updateDriver(Driver driver) {
         Driver existingDriver = driverRepository.findById(driver.getId())
-                .orElseThrow(() -> new RuntimeException("Driver not found with id: " + driver.getId()));
+                .orElseThrow(() -> new DriverNotFoundException("Driver not found with id: " + driver.getId()));
 
         if (!existingDriver.getPersonalNumber().equals(driver.getPersonalNumber())) {
             driverRepository.findByPersonalNumber(driver.getPersonalNumber())
                     .ifPresent(s -> {
-                        throw new RuntimeException("New personal number is already in use.");
+                        throw new DriverAlreadyExistsException("New personal number is already in use.");
                     });
         }
 
         if (!driver.getPersonalNumber().matches("\\d+")) {
-            throw new RuntimeException("Personal number should only contain numbers.");
+            throw new InvalidDriverStatusException("Personal number should only contain numbers.");
         }
 
         if (driver.getWorkingHours() > MAX_WORKING_HOURS) {
-            throw new RuntimeException("Working hours exceed the maximum limit.");
+            throw new DriverAssignmentException("Working hours exceed the maximum limit.");
         }
 
         if (!validStatuses.contains(driver.getStatus())) {
-            throw new RuntimeException("Invalid status. Status must be either 'rest' or 'driving'.");
+            throw new InvalidDriverStatusException("Invalid status. Status must be either 'rest' or 'driving'.");
         }
 
         existingDriver.setName(driver.getName());
@@ -101,10 +105,10 @@ public class DriverService {
     @Transactional
     public void deleteDriver(Integer id) {
         Driver existingDriver = driverRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Driver not found with id: " + id));
+                .orElseThrow(() -> new DriverNotFoundException("Driver not found with id: " + id));
 
         if (existingDriver.getCurrentTruck() != null || !existingDriver.getOrders().isEmpty()) {
-            throw new RuntimeException("Driver is currently assigned and cannot be deleted.");
+            throw new DriverAssignmentException("Driver is currently assigned and cannot be deleted.");
         }
 
         driverRepository.deleteById(id);
@@ -113,21 +117,21 @@ public class DriverService {
     @Transactional
     public void assignDriverToTruck(Integer driverId, Integer truckId) {
         Driver driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found with id: " + driverId));
+                .orElseThrow(() -> new DriverNotFoundException("Driver not found with id: " + driverId));
 
         if (driver.getCurrentTruck() != null && !driver.getCurrentTruck().getId().equals(truckId)) {
-            throw new RuntimeException("Driver is already assigned to a different truck.");
+            throw new DriverAssignmentException("Driver is already assigned to a different truck.");
         }
 
         Truck truck = truckRepository.findById(truckId)
-                .orElseThrow(() -> new RuntimeException("Truck not found with id: " + truckId));
+                .orElseThrow(() -> new DriverNotFoundException("Truck not found with id: " + truckId));
 
         if (truck.getDrivers().contains(driver)) {
-            throw new RuntimeException("Truck is already assigned to the specified driver.");
+            throw new DriverAssignmentException("Truck is already assigned to the specified driver.");
         }
 
         if (!driver.getCurrentCity().equals(truck.getCurrentCity())) {
-            throw new RuntimeException("Driver and truck are not in the same city.");
+            throw new DriverAssignmentException("Driver and truck are not in the same city.");
         }
 
         driver.setCurrentTruck(truck);
@@ -137,11 +141,11 @@ public class DriverService {
     @Transactional
     public void updateDriverStatus(Integer driverId, String status) {
         Driver driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found with id: " + driverId));
+                .orElseThrow(() -> new DriverNotFoundException("Driver not found with id: " + driverId));
 
         System.out.print(status);
         if (!validStatuses.contains(status)) {
-            throw new RuntimeException("Invalid status provided.");
+            throw new InvalidDriverStatusException("Invalid status provided.");
         }
 
         driver.setStatus(status);
@@ -154,7 +158,7 @@ public class DriverService {
 
     public Driver getDriverById(Integer id) {
         return driverRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Driver not found with id: " + id));
+                .orElseThrow(() -> new DriverNotFoundException("Driver not found with id: " + id));
     }
 
     public int getDriverswithMaximumWorkHours() {
@@ -163,7 +167,7 @@ public class DriverService {
 
     public Driver getDriverByUsername(String username) {
         return driverRepository.findByPersonalNumber(username)
-                .orElseThrow(() -> new RuntimeException("Driver not found with username: " + username));
+                .orElseThrow(() -> new DriverNotFoundException("Driver not found with username: " + username));
     }
 
     public List<Driver> getCoDrivers(Integer truckId) {
@@ -273,7 +277,7 @@ public class DriverService {
     @Transactional
     public DriverDTO getDriverDashboardData(String username) {
         Driver driver = driverRepository.findByPersonalNumber(username)
-                .orElseThrow(() -> new RuntimeException("Driver not found with username: " + username));
+                .orElseThrow(() -> new DriverNotFoundException("Driver not found with username: " + username));
 
         DriverDTO driverDTO = convertToDTO(driver);
 
@@ -284,7 +288,7 @@ public class DriverService {
             driverDTO.setOrderNumber(getOrderNumberForTruck(truckId));
 
             Order currentOrder = orderRepository.findByTruckId(truckId)
-                    .orElseThrow(() -> new RuntimeException("Order not found for truck id: " + truckId));
+                    .orElseThrow(() -> new DriverAssignmentException("Order not found for truck id: " + truckId));
             driverDTO.setWaypoints(getWaypointsForOrder(currentOrder.getId()));
         }
 
@@ -312,7 +316,7 @@ public class DriverService {
             Driver driver = optionalDriver.get();
 
             if (driver.getShiftStartTime() == null) {
-                throw new IllegalStateException("Shift has not been started.");
+                throw new DriverAssignmentException("Shift has not been started.");
             }
 
             Instant shiftStart = driver.getShiftStartTime();
@@ -328,7 +332,7 @@ public class DriverService {
 
                 totalHours += additionalHours;
                 if (totalHours > 176) {
-                    throw new IllegalStateException("Exceeded maximum working hours limit.");
+                    throw new DriverAssignmentException("Exceeded maximum working hours limit.");
                 } else {
                     driver.setWorkingHours((int) totalHours);
                     driver.setAccumulatedMinutes((int) remainingMinutes);
@@ -339,7 +343,7 @@ public class DriverService {
             driver.setShiftEndTime(shiftEnd);
             driverRepository.save(driver);
         } else {
-            throw new IllegalStateException("Driver not found.");
+            throw new DriverNotFoundException("Driver not found.");
         }
     }
 

@@ -1,17 +1,18 @@
 package com.tsystems.logistics.service;
 
-import com.tsystems.logistics.entities.Order;
 import com.tsystems.logistics.entities.Driversorder;
 import com.tsystems.logistics.entities.DriversorderId;
 import com.tsystems.logistics.repository.DriversorderRepository;
 import com.tsystems.logistics.repository.OrderRepository;
+
+import com.tsystems.logistics.exception.DriverOrderAssignmentException;
+import com.tsystems.logistics.exception.DriverOrderNotFoundException;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +28,7 @@ public class DriversorderService {
         id.setOrderId(driversorder.getOrder().getId());
 
         if (driversorderRepository.existsById(id)) {
-            throw new RuntimeException("This driver is already assigned to the order.");
+            throw new DriverOrderAssignmentException("This driver is already assigned to the order.");
         }
 
         return driversorderRepository.save(driversorder);
@@ -40,7 +41,7 @@ public class DriversorderService {
         id.setOrderId(orderId);
 
         if (!driversorderRepository.existsById(id)) {
-            throw new RuntimeException("Driversorder not found with driverId: " + driverId + " and orderId: " + orderId);
+            throw new DriverOrderNotFoundException("Driversorder not found with driverId: " + driverId + " and orderId: " + orderId);
         }
 
         driversorderRepository.deleteById(id);
