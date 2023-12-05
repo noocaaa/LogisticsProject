@@ -1,0 +1,150 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Add Order</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/libraryStyles.css}">
+
+    <style>
+        body {
+            overflow-y: inherit;
+        }
+    </style>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const cities = /*[[${cities}]]*/ [];
+        const cargos = /*[[${cargos}]]*/ [];
+        /*]]>*/
+    </script>
+
+    <script>
+        let waypointIndex = 0;
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            waypointIndex = document.querySelectorAll('#waypointsContainer .form-group').length;
+        });
+
+        function addWaypoint() {
+            const waypointsContainer = document.getElementById('waypointsContainer');
+            const newWaypointDiv = document.createElement('div');
+            newWaypointDiv.className = 'form-group';
+
+            const citySelect = document.createElement('select');
+            citySelect.className = 'form-control';
+            citySelect.name = `waypoints[${waypointIndex}].cityId`;
+            citySelect.required = true;
+
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select City';
+            citySelect.appendChild(defaultOption);
+
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city.id;
+                option.textContent = city.name;
+                citySelect.appendChild(option);
+            });
+
+            const cargoSelect = document.createElement('select');
+            cargoSelect.className = 'form-control';
+            cargoSelect.name = `waypoints[${waypointIndex}].cargoId`;
+            cargoSelect.required = true;
+
+            const defaultCargoOption = document.createElement('option');
+            defaultCargoOption.value = '';
+            defaultCargoOption.textContent = 'Select Cargo';
+            cargoSelect.appendChild(defaultCargoOption);
+
+            cargos.forEach(cargo => {
+                const option = document.createElement('option');
+                option.value = cargo.id;
+                option.textContent = cargo.name;
+                cargoSelect.appendChild(option);
+            });
+
+            const typeSelect = document.createElement('select');
+            typeSelect.className = 'form-control';
+            typeSelect.name = `waypoints[${waypointIndex}].type`;
+            const loadingOption = new Option('Loading', 'loading');
+            const unloadingOption = new Option('Unloading', 'unloading');
+            typeSelect.add(loadingOption);
+            typeSelect.add(unloadingOption);
+
+            newWaypointDiv.appendChild(citySelect);
+            newWaypointDiv.appendChild(cargoSelect);
+            newWaypointDiv.appendChild(typeSelect);
+
+            waypointsContainer.appendChild(newWaypointDiv);
+
+            waypointIndex++;
+        }
+    </script>
+</head>
+
+<body>
+
+<div class="navbar">
+    <span>Welcome</span>
+    <button class="logout-btn" onclick="location.href='logout'">Log Out</button>
+</div>
+
+<div class="wrapper">
+    <nav class="sidebar">
+        <ul>
+            <li><button class="sidebar-button" onclick="location.href='/dashboard'">Dashboard</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/trucks'">Trucks</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/drivers'">Drivers</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/orders'">Orders</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/cargos'">Cargo Assigment</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/planning'">Planning and Routing</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/settings'">Settings</button></li>
+        </ul>
+    </nav>
+
+    <div class="content">
+        <h2>Add Order</h2>
+
+        <div th:if="${error}" class="alert alert-danger">
+            <p th:text="${error}"></p>
+        </div>
+
+        <form id="addOrderForm" th:action="@{/orders/addOrder}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div class="form-group">
+                <label for="completed">Completed:</label>
+                <select class="form-control" id="completed" name="completed">
+                    <option value="false">No</option>
+                    <option value="true">Yes</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Waypoints:</label>
+                <div id="waypointsContainer">
+                </div>
+                <button type="button" onclick="addWaypoint()">Add Waypoint</button>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Add Order</button>
+        </form>
+    </div>
+</div>
+
+<template id="cityOptionsTemplate">
+    <option value="">Select City</option>
+    <th:block th:each="city : ${cities}">
+        <option th:value="${city.id}" th:text="${city.name}"></option>
+    </th:block>
+</template>
+
+
+</body>
+</html>

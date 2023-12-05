@@ -1,0 +1,75 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Order Details</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/libraryStyles.css}">
+</head>
+
+<body>
+
+<div class="navbar">
+    <span>Welcome</span>
+    <button class="logout-btn" onclick="location.href='logout'">Log Out</button>
+</div>
+
+<div class="wrapper">
+    <nav class="sidebar">
+        <ul>
+            <li><button class="sidebar-button" onclick="location.href='/dashboard'">Dashboard</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/trucks'">Trucks</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/drivers'">Drivers</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/orders'">Orders</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/cargos'">Cargo Assigment</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/planning'">Planning and Routing</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/settings'">Settings</button></li>
+        </ul>
+    </nav>
+
+    <div class="content">
+            <h2>Order Details</h2>
+
+            <p><strong>Order ID:</strong> <span th:text="${order.id}"></span></p>
+            <p><strong>Completed:</strong> <span th:text="${order.completed ? 'Yes' : 'No'}"></span></p>
+            <div th:if="${order.truck != null}">
+                <p><strong>Truck Number:</strong> <span th:text="${order.truck.id}"></span></p>
+            </div>
+
+            <div th:if="${order.drivers != null and !order.drivers.isEmpty()}">
+                <h3>Assigned Drivers</h3>
+                <ul>
+                    <li th:each="driver : ${order.drivers}">
+                        <span th:text="${driver.name} + ' ' + ${driver.surname}"></span>
+                    </li>
+                </ul>
+            </div>
+
+            <div th:if="${order.waypoints != null and !order.waypoints.isEmpty()}">
+                <h3>Waypoints</h3>
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th>City</th>
+                        <th>Cargo</th>
+                        <th>Type</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="waypoint : ${order.waypoints}">
+                        <td th:text="${waypoint.getCityName()}"></td>
+                        <td th:text="${waypoint.getCargoId()}"></td>
+                        <td th:text="${waypoint.getType()}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+    </div>
+
+</div>
+</body>
+</html>

@@ -23,7 +23,7 @@ public class Order {
     @ManyToMany(mappedBy = "orders")
     private Set<Driver> drivers = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "order")
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Waypoint> waypoints = new LinkedHashSet<>();
 
     public Integer getId() {

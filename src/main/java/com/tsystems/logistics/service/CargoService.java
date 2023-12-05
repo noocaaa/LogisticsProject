@@ -11,8 +11,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
+import com.tsystems.logistics.exception.CargoAlreadyExistsException;
+import com.tsystems.logistics.exception.CargoNotFoundException;
+import com.tsystems.logistics.exception.CargoAssignmentException;
+
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import com.tsystems.logistics.dto.CargoDTO;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +33,7 @@ public class CargoService {
         Optional<Cargo> existingCargo = cargoRepository.findById(cargo.getId());
 
         if (existingCargo != null) {
-            throw new RuntimeException("A cargo with the same number already exists.");
+            throw new CargoAlreadyExistsException("A cargo with the same number already exists.");
         }
 
         return cargoRepository.save(cargo);
@@ -36,7 +43,7 @@ public class CargoService {
     public Cargo updateCargo(Cargo cargo) {
 
         Cargo existingCargo = cargoRepository.findById(cargo.getId())
-                .orElseThrow(() -> new RuntimeException("Cargo not found with id: " + cargo.getId()));
+                .orElseThrow(() -> new CargoNotFoundException("Cargo not found with id: " + cargo.getId()));
 
         existingCargo.setName(cargo.getName());
         existingCargo.setWeight(cargo.getWeight());
@@ -49,11 +56,10 @@ public class CargoService {
     public void deleteCargo(Integer id) {
 
         Cargo existingCargo = cargoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cargo not found with id: " + id));
+                .orElseThrow(() -> new CargoNotFoundException("Cargo not found with id: " + id));
 
-        // Before deleting, we should check that the cargo is not assigned.
         if (!existingCargo.getWaypoints().isEmpty()) {
-            throw new RuntimeException("Cargo is currently assigned and cannot be deleted.");
+            throw new CargoAssignmentException("Cargo is currently assigned and cannot be deleted.");
         }
 
         cargoRepository.deleteById(id);
@@ -67,37 +73,63 @@ public class CargoService {
     public Cargo getCargoById(Integer id) {
 
         return cargoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cargo not found with id: " + id));
+                .orElseThrow(() -> new CargoNotFoundException("Cargo not found with id: " + id));
+    }
+
+    public List<Cargo> getAvailableCargos() {
+        return cargoRepository.findAll().stream()
+                .filter(cargo -> "ready".equals(cargo.getStatus()))
+                .collect(Collectors.toList());
     }
 
     @Transactional
     public void assignCargoToOrder(Integer cargoId, Integer orderId) {
 
         Cargo cargo = cargoRepository.findById(cargoId)
-                .orElseThrow(() -> new RuntimeException("Cargo not found with id: " + cargoId));
+                .orElseThrow(() ->  new CargoNotFoundException("Cargo not found with id: " + cargoId));
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() ->  new CargoNotFoundException("Order not found with id: " + orderId));
 
-        // Check cargo and order status
         if (!"ready".equals(cargo.getStatus())) {
-            throw new RuntimeException("Cargo is not ready to be shipped.");
+            throw new CargoAssignmentException("Cargo is not ready to be shipped.");
         }
 
         if (order.getCompleted()) {
-            throw new RuntimeException("Order is already completed.");
+            throw new CargoAssignmentException("Order is already completed.");
         }
 
-        // Add the cargo to the order
         Waypoint newWaypoint = new Waypoint();
         newWaypoint.setCargo(cargo);
         newWaypoint.setOrder(order);
         order.getWaypoints().add(newWaypoint);
 
-        // Update cargo status
         cargo.setStatus("shipped");
         cargoRepository.save(cargo);
 
         orderRepository.save(order);
+    }
+
+    public int cargoByStatus(String status) {
+        return cargoRepository.countByStatus(status);
+    }
+
+    public CargoDTO convertToDTO(Cargo cargo) {
+        return new CargoDTO(cargo.getId(), cargo.getName(), cargo.getWeight(), cargo.getStatus());
+    }
+
+    public Cargo convertToEntity(CargoDTO cargoDTO) {
+        Cargo cargo = new Cargo();
+        cargo.setId(cargoDTO.getId());
+        cargo.setName(cargoDTO.getName());
+        cargo.setWeight(cargoDTO.getWeight());
+        cargo.setStatus(cargoDTO.getStatus());
+        return cargo;
+    }
+
+    public List<CargoDTO> convertToDTOList(List<Cargo> cargos) {
+        return cargos.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
 

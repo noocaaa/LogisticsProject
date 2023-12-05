@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
+import com.tsystems.logistics.exception.CityAlreadyExistsException;
+import com.tsystems.logistics.exception.CityNotFoundException;
+
 import java.util.List;
 
 @Service
@@ -18,7 +21,7 @@ public class CityService {
     @Transactional
     public City addCity(City city) {
         if (cityRepository.findByName(city.getName()) != null) {
-            throw new RuntimeException("A city with the same name already exists.");
+            throw new CityAlreadyExistsException("A city with the same name already exists.");
         }
         return cityRepository.save(city);
     }
@@ -26,7 +29,7 @@ public class CityService {
     @Transactional
     public City updateCity(City city) {
         City existingCity = cityRepository.findById(city.getId())
-                .orElseThrow(() -> new RuntimeException("City not found with id: " + city.getId()));
+                .orElseThrow(() -> new CityNotFoundException("City not found with id: " + city.getId()));
 
         existingCity.setName(city.getName());
         return cityRepository.save(existingCity);
@@ -35,7 +38,7 @@ public class CityService {
     @Transactional
     public void deleteCity(Integer id) {
         City existingCity = cityRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("City not found with id: " + id));
+                .orElseThrow(() -> new CityNotFoundException("City not found with id: " + id));
         cityRepository.deleteById(id);
     }
 
@@ -45,7 +48,7 @@ public class CityService {
 
     public City getCityById(Integer id) {
         return cityRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("City not found with id: " + id));
+                .orElseThrow(() -> new CityNotFoundException("City not found with id: " + id));
     }
 
     public City getCityByName(String name) {

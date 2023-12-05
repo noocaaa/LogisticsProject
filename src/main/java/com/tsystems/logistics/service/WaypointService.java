@@ -4,6 +4,13 @@ import com.tsystems.logistics.entities.Order;
 import com.tsystems.logistics.entities.Waypoint;
 import com.tsystems.logistics.entities.Cargo;
 
+import com.tsystems.logistics.dto.WaypointDTO;
+
+
+import com.tsystems.logistics.exception.InvalidCargoForWaypointException;
+import com.tsystems.logistics.exception.InvalidCityForWaypointException;
+import com.tsystems.logistics.exception.InvalidWaypointTypeException;
+import com.tsystems.logistics.exception.WaypointNotFoundException;
 import com.tsystems.logistics.repository.CityRepository;
 import com.tsystems.logistics.repository.OrderRepository;
 import com.tsystems.logistics.repository.WaypointRepository;
@@ -33,7 +40,7 @@ public class WaypointService {
     @Transactional
     public Waypoint updateWaypoint(Waypoint waypoint) {
         Waypoint existingWaypoint = waypointRepository.findById(waypoint.getId())
-                .orElseThrow(() -> new RuntimeException("Waypoint not found with id: " + waypoint.getId()));
+                .orElseThrow(() -> new WaypointNotFoundException("Waypoint not found with id: " + waypoint.getId()));
 
         validateWaypoint(waypoint);
         existingWaypoint.setOrder(waypoint.getOrder());
@@ -47,7 +54,7 @@ public class WaypointService {
     @Transactional
     public void deleteWaypoint(Integer id) {
         Waypoint existingWaypoint = waypointRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Waypoint not found with id: " + id));
+                .orElseThrow(() -> new WaypointNotFoundException("Waypoint not found with id: " + id));
         waypointRepository.deleteById(id);
     }
 
@@ -57,17 +64,17 @@ public class WaypointService {
 
     public Waypoint getWaypointById(Integer id) {
         return waypointRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Waypoint not found with id: " + id));
+                .orElseThrow(() -> new WaypointNotFoundException("Waypoint not found with id: " + id));
     }
 
     @Transactional
     public void reorderWaypoints(Integer orderId, List<Integer> waypointIds) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new WaypointNotFoundException("Order not found with id: " + orderId));
 
         waypointIds.forEach(waypointId -> {
             Waypoint waypoint = waypointRepository.findById(waypointId)
-                    .orElseThrow(() -> new RuntimeException("Waypoint not found with id: " + waypointId));
+                    .orElseThrow(() -> new WaypointNotFoundException("Waypoint not found with id: " + waypointId));
             waypoint.setOrder(order);
             waypointRepository.save(waypoint);
         });
@@ -75,15 +82,15 @@ public class WaypointService {
 
     private void validateWaypoint(Waypoint waypoint) {
         if (waypoint.getCity() == null || !cityRepository.existsById(waypoint.getCity().getId())) {
-            throw new RuntimeException("Invalid city for waypoint.");
+            throw new InvalidCityForWaypointException("Invalid city for waypoint.");
         }
 
         if (waypoint.getCargo() != null && (!cargoRepository.existsById(waypoint.getCargo().getId()) || !isCargoValid(waypoint.getCargo()))) {
-            throw new RuntimeException("Invalid or unavailable cargo for waypoint.");
+            throw new InvalidCargoForWaypointException("Invalid or unavailable cargo for waypoint.");
         }
 
         if (!isValidWaypointType(waypoint.getType())) {
-            throw new RuntimeException("Invalid waypoint type. Must be 'loading' or 'unloading'.");
+            throw new InvalidWaypointTypeException("Invalid waypoint type. Must be 'loading' or 'unloading'.");
         }
     }
 
@@ -95,4 +102,23 @@ public class WaypointService {
         return "loading".equals(type) || "unloading".equals(type);
     }
 
+    public WaypointDTO convertToDTO(Waypoint waypoint) {
+        if (waypoint == null) {
+            return null;
+        }
+
+        WaypointDTO dto = new WaypointDTO();
+        dto.setId(waypoint.getId());
+        dto.setOrderId(waypoint.getOrder().getId());
+        dto.setCityId(waypoint.getCity().getId());
+        dto.setCityName(waypoint.getCity().getName());
+        dto.setCargoId(waypoint.getCargo().getId());
+        dto.setType(waypoint.getType());
+
+        return dto;
+    }
+
+    private String getCityName(Waypoint waypoint) {
+        return waypoint.getCity().getName();
+    }
 }

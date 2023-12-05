@@ -1,0 +1,221 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Orders</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/libraryStyles.css}">
+</head>
+
+<body>
+
+<div class="navbar">
+    <span>Welcome</span>
+    <button class="logout-btn" onclick="location.href='logout'">Log Out</button>
+</div>
+
+<div class="wrapper">
+    <nav class="sidebar">
+        <ul>
+            <li><button class="sidebar-button" onclick="location.href='/dashboard'">Dashboard</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/trucks'">Trucks</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/drivers'">Drivers</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/orders'">Orders</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/cargos'">Cargo Assigment</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/planning'">Planning and Routing</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/settings'">Settings</button></li>
+        </ul>
+    </nav>
+
+    <div class="content">
+        <h2>Order List</h2>
+
+        <button class="btn btn-primary mb-3" onclick="location.href='/orders/add'">Add Order</button>
+
+        <div th:if="${error}" class="alert alert-danger">
+            <p th:text="${error}"></p>
+        </div>
+
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Completed</th>
+                <th>Waypoints Count</th>
+                <th>Drivers</th>
+                <th>Truck Number</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="order : ${orders}">
+                <td th:text="${order.id}"></td>
+                <td th:text="${order.completed ? 'Yes' : 'No'}"></td>
+                <td th:text="${order.getWaypointsCount()}"></td>
+                <td>
+                    <div th:if="${order.getDrivers().size() != 0 or order.getCompleted()}">
+                        <span th:text="${order.getDrivers().size()}"></span>
+                    </div>
+                    <div th:if="${order.getTruck() != null and !order.getCompleted() and order.getDrivers().size() == 0 }">
+                        <button type="button" class="btn btn-primary" style="background-color: green" th:attr="data-orderid=${order.id}" th:onclick="'loadDrivers(' + ${order.id} + ')'">
+                            Assign Drivers
+                        </button>
+                    </div>
+                </td>
+                <td>
+                    <div th:if="${order.getTruck() != null}">
+                        <span th:text="${order.getTruck().getId()}"></span>
+                    </div>
+                    <div th:if="${order.getTruck() == null}">
+                        <button type="button" class="btn btn-primary" style="background-color: green" th:attr="data-orderid=${order.id}" th:onclick="'loadTrucks(' + ${order.id} + ')'">
+                            Assign Truck
+                        </button>
+                    </div>
+                </td>
+                <td>
+                    <a th:href="@{/orders/details/{id}(id=${order.id})}" class="btn btn-warning btn-sm">
+                        <i class="icon fas fa-edit"></i> Details
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <div th:each="order : ${orders}" th:id="'assignTruckModal' + ${order.id}" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Assign Truck for Order <span th:text="${order.id}"></span></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div th:if="${#lists.isEmpty(truckDTOs)}">
+                        <p>There are no available trucks for this order.</p>
+                    </div>
+                    <form th:if="${!#lists.isEmpty(truckDTOs)}" th:action="@{/orders/assignTruck/{orderId}(orderId=${order.id})}" method="post">
+                        <select name="truckId">
+                            <option value="">Select Truck</option>
+                            <option th:each="truck : ${truckDTOs}"
+                                    th:value="${truck.id}"
+                                    th:text="${truck.number}">Truck 1</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Assign</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:each="order : ${orders}" th:id="'assignDriverModal' + ${order.id}" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Assign Driver for Order <span th:text="${order.id}"></span></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div th:if="${#lists.isEmpty(driverDTOs)}">
+                        <p>There are no available drivers for this order.</p>
+                    </div>
+                    <form th:if="${!#lists.isEmpty(driverDTOs)}" th:action="@{/orders/assignDriver/{orderId}(orderId=${order.id})}" method="post">
+                        <select name="driverIds" multiple>
+                            <option value="">Select Driver</option>
+                            <option th:each="driver : ${driverDTOs}"
+                                    th:value="${driver.id}"
+                                    th:text="${driver.name + ' ' + driver.surname}">Driver Name</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Assign</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+</body>
+
+<script>
+    $(document).ready(function() {
+        $('.assignTruckBtn').each(function() {
+            Co
+            var orderId = $(this).data('orderid');
+
+            $('#assignTruckModal' + orderId).on('hidden.bs.modal', function () {
+                var truckSelect = $('#assignTruckModal' + orderId).find('select[name="truckId"]');
+                truckSelect.empty();
+                truckSelect.append('<option value="">Select Truck</option>');
+            });
+
+            $('#assignDriverModal' + orderId).on('hidden.bs.modal', function () {
+                var driverSelect = $('#assignDriverModal' + orderId).find('select[name="driverId"]');
+                driverSelect.empty();
+                driverSelect.append('<option value="">Select Driver</option>');
+            });
+        });
+    });
+
+    function loadTrucks(orderId) {
+        $.ajax({
+            url: '/orders/assignTruck/' + orderId,
+            type: 'GET',
+            success: function(trucks) {
+                console.log(trucks)
+                fillTruckModal(trucks, orderId);
+            },
+            error: function(error) {
+                console.log('Error loading the trucks:', error);
+            }
+        });
+    }
+
+    function loadDrivers(orderId) {
+        $.ajax({
+            url: '/orders/assignDriver/' + orderId,
+            type: 'GET',
+            success: function(drivers) {
+                fillDriver(drivers, orderId);
+            },
+            error: function(error) {
+                console.log('Error loading the drivers:', error);
+            }
+        });
+    }
+
+    function fillTruckModal(trucks, orderId) {
+        var modal = $('#assignTruckModal' + orderId);
+        var truckSelect = modal.find('select[name="truckId"]');
+        truckSelect.empty();
+
+        trucks.forEach(function (truck) {
+            truckSelect.append(new Option(truck.number, truck.id));
+        });
+
+        modal.modal('show');
+    }
+
+    function fillDriver(drivers, orderId) {
+        var modal2 = $('#assignDriverModal' + orderId);
+        var driverSelect = modal2.find('select[name="driverIds"]');
+        driverSelect.empty();
+
+        drivers.forEach(function(driver) {
+            driverSelect.append(new Option(driver.name + ' ' + driver.surname, driver.id));
+        });
+
+        modal2.modal('show');
+    }
+
+</script>
+
+</html>

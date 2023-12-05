@@ -1,0 +1,39 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Logistic Web</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/libraryStyles.css}">
+</head>
+
+<body>
+
+<div class="navbar">
+    <span>Welcome</span>
+    <button class="logout-btn" onclick="location.href='logout'">Log Out</button>
+</div>
+
+<div class="wrapper">
+    <nav class="sidebar">
+        <ul>
+            <li><button class="sidebar-button" onclick="location.href='/dashboard'">Dashboard</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/trucks'">Trucks</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/drivers'">Drivers</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/orders'">Orders</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/cargos'">Cargo Assigment</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/planning'">Planning and Routing</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/settings'">Settings</button></li>
+        </ul>
+    </nav>
+
+    <div class="content">
+    </div>
+</div>
+
+</body>
+</html>

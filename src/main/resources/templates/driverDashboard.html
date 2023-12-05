@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Driver Dashboard</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f4f4;
+        }
+        .card {
+            margin-top: 20px;
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-title {
+            margin: 0;
+        }
+
+        .logout-button {
+            padding: 0.5rem 1rem;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <h2 class="header-title">Driver Dashboard</h2>
+        <div class="logout-button">
+            <form th:action="@{/logout}" method="post">
+                <input type="submit" class="btn btn-warning" value="Log Out"/>
+            </form>
+        </div>
+    </div>
+
+    <div th:if="${error}">
+        <div class="alert alert-danger">
+            <p th:text="${error}"></p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Details</h5>
+        </div>
+        <div class="card-body">
+            <p class="card-text"><b>Driver's Personal Number: </b><span th:text="${driverDTO.personalNumber}"></span></p>
+            <p class="card-text"><b>Co-Driver's Personal Number: </b><span th:text="${driverDTO.coDrivers}"></span></p>
+            <p class="card-text"><b>Truck Number: </b><span th:text="${driverDTO.truckNumber}"></span></p>
+            <p class="card-text"><b>Order Number: </b><span th:text="${driverDTO.orderNumber}"></span></p>
+            <div class="card-body d-flex justify-content-center">
+                <div class="btn-group" role="group">
+                    <form th:action="@{/drivers/startShift}" method="post">
+                        <button type="submit" class="btn btn-success">Start Shift</button>
+                    </form>
+                    <form th:action="@{/drivers/endShift}" method="post">
+                        <button type="submit" class="btn btn-danger">End Shift</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Waypoints</h5>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item" th:each="waypoint : ${driverDTO.waypoints}">
+                <span th:text="${waypoint.type} + ' in ' + ${waypoint.cityName} + ' - Cargo ID: ' + ${waypoint.cargoId}"></span>
+                <form th:action="@{/updateCargoAndOrderStatus}" method="post">
+                    <input type="hidden" name="waypointId" th:value="${waypoint.id}">
+                    <select class="form-control" name="orderStatus">
+                        <option value="Uploaded">Uploaded</option>
+                        <option value="Unloaded">Unloaded</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">Update status</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Update Status</h5>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/updateDriverStatus}" method="post">
+                <div class="form-group">
+                    <label for="driverStatus">Driver Status</label>
+                    <select class="form-control" id="driverStatus" name="status">
+                        <option>Behind the wheel</option>
+                        <option>Second driver</option>
+                        <option>Loading and unloading work</option>
+                        <option>Rest</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Status</button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

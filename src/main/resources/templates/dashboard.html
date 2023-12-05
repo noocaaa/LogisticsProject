@@ -1,0 +1,98 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/libraryStyles.css}">
+</head>
+
+<body>
+
+<div class="navbar">
+    <span>Welcome </span>
+    <button class="logout-btn" onclick="location.href='logout'">Log Out</button>
+</div>
+
+<div class="wrapper">
+    <nav class="sidebar">
+        <ul>
+            <li><button class="sidebar-button" onclick="location.href='/dashboard'">Dashboard</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/trucks'">Trucks</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/drivers'">Drivers</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/orders'">Orders</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/cargos'">Cargo Assigment</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/planning'">Planning and Routing</button></li>
+            <li><button class="sidebar-button" onclick="location.href='/settings'">Settings</button></li>
+        </ul>
+    </nav>
+
+    <div class="content">
+        <div class="dashboard-header">
+            <h2>Dashboard</h2>
+        </div>
+        <div class="quick-actions">
+            <button class="btn btn-primary" onclick="location.href='/trucks/add'">Add Truck</button>
+            <button class="btn btn-primary" onclick="location.href='/drivers/add'">Add Driver</button>
+            <button class="btn btn-primary" onclick="location.href='/orders/add'">Add Order</button>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="info-box">
+                    <h3>Orders Summary</h3>
+                    <p><strong>Total Orders:</strong> <span th:text="${dashboardData['totalOrders']}"></span></p>
+                    <p><strong>In Progress:</strong> <span th:text="${dashboardData['completedOrders']}"></p>
+                    <p><strong>Completed:</strong> <span th:text="${dashboardData['inProgressOrders']}"></span></p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-box">
+                    <h3>Alerts & Notifications</h3>
+                    <p><strong>Trucks needing maintenance:</strong> <span th:text="${dashboardData['maintenanceTrucks']}"></span></p>
+                    <p><strong>Drivers with the maximum hours worked:</strong> <span th:text="${dashboardData['driversRelax']}">/span></p>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="info-box">
+                    <h3>Truck Availability</h3>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Number</th>
+                            <th>Capacity</th>
+                            <th>Current City</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="truck : ${trucks}">
+                            <td th:text="${truck.number}">Truck Number</td>
+                            <td th:text="${truck.capacity}">Capacity</td>
+                            <td th:text="${truck.currentCity}">City</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="info-box">
+                    <h3>Orders Summary</h3>
+                    <p><strong>Total Cargos:</strong> <span th:text="${dashboardData['totalCargos']}"></span></p>
+                    <p><strong>Ready Cargos:</strong> <span th:text="${dashboardData['readyCargos']}"></p>
+                    <p><strong>Shipped Cargos:</strong> <span th:text="${dashboardData['shippedCargos']}"></span></p>
+                    <p><strong>Delivered Cargos:</strong> <span th:text="${dashboardData['deliveredCargos']}"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
