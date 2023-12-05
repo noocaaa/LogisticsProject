@@ -6,6 +6,10 @@ import com.tsystems.logistics.entities.Truck;
 import com.tsystems.logistics.entities.Cargo;
 import com.tsystems.logistics.entities.Waypoint;
 
+import com.tsystems.logistics.exception.TruckAlreadyExistsException;
+import com.tsystems.logistics.exception.TruckAssignmentException;
+import com.tsystems.logistics.exception.TruckNotAvailableException;
+import com.tsystems.logistics.exception.TruckNotFoundException;
 import com.tsystems.logistics.repository.TruckRepository;
 import com.tsystems.logistics.repository.OrderRepository;
 import com.tsystems.logistics.repository.CargoRepository;
@@ -32,12 +36,12 @@ public class TruckService {
     public Truck addTruck(Truck truck) {
 
         if (truckRepository.findByNumber(truck.getNumber()) != null) {
-            throw new RuntimeException("Truck number already in use.");
+            throw new TruckAlreadyExistsException("Truck number already in use.");
         }
 
         String status = truck.getStatus();
         if (!(status.equals("OK") || status.equals("NOK"))) {
-            throw new RuntimeException("Invalid truck status. Status must be 'OK' or 'NOK'.");
+            throw new TruckAssignmentException("Invalid truck status. Status must be 'OK' or 'NOK'.");
         }
 
         return truckRepository.save(truck);
@@ -47,16 +51,16 @@ public class TruckService {
     public Truck updateTruck(Truck truck) {
 
         Truck existingTruck = truckRepository.findById(truck.getId())
-                .orElseThrow(() -> new RuntimeException("Truck not found with id: " + truck.getId()));
+                .orElseThrow(() -> new TruckNotFoundException("Truck not found with id: " + truck.getId()));
 
         Truck truckWithSameNumber = truckRepository.findByNumber(truck.getNumber());
         if (truckWithSameNumber != null && !truckWithSameNumber.getId().equals(truck.getId())) {
-            throw new RuntimeException("Truck number is already in use by another truck.");
+            throw new TruckAlreadyExistsException("Truck number is already in use by another truck.");
         }
 
         String status = truck.getStatus();
         if (!(status.equals("OK") || status.equals("NOK"))) {
-            throw new RuntimeException("Invalid truck status. Status must be 'OK' or 'NOK'.");
+            throw new TruckAssignmentException("Invalid truck status. Status must be 'OK' or 'NOK'.");
         }
 
         existingTruck.setNumber(truck.getNumber());
@@ -71,10 +75,10 @@ public class TruckService {
     public void deleteTruck(Integer id) {
 
         Truck existingTruck = truckRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Truck not found with id: " + id));
+                .orElseThrow(() -> new TruckNotFoundException("Truck not found with id: " + id));
 
         if (!existingTruck.getOrders().isEmpty() || !existingTruck.getDrivers().isEmpty()) {
-            throw new RuntimeException("Truck is currently in use and cannot be deleted.");
+            throw new TruckAlreadyExistsException("Truck is currently in use and cannot be deleted.");
         }
 
         truckRepository.deleteById(id);
@@ -86,22 +90,22 @@ public class TruckService {
 
     public Truck getTruckById(Integer id) {
         return truckRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Truck not found with id: " + id));
+                .orElseThrow(() -> new TruckNotFoundException("Truck not found with id: " + id));
     }
 
     @Transactional
     public void assignTruckToOrder(Integer truckId, Integer orderId) {
         Truck truck = truckRepository.findById(truckId)
-                .orElseThrow(() -> new RuntimeException("Truck not found with id: " + truckId));
+                .orElseThrow(() -> new TruckNotFoundException("Truck not found with id: " + truckId));
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new TruckAssignmentException("Order not found with id: " + orderId));
 
         if (!"OK".equals(truck.getStatus())) {
-            throw new RuntimeException("Truck is currently unavailable.");
+            throw new TruckNotAvailableException("Truck is currently unavailable.");
         }
 
         if (truck.getOrders() != null && truck.getOrders().contains(order)) {
-            throw new RuntimeException("Truck is already assigned to this order.");
+            throw new TruckAssignmentException("Truck is already assigned to this order.");
         }
 
         if (truck.getOrders() == null) {
@@ -150,7 +154,7 @@ public class TruckService {
     @Transactional
     public List<Truck> getAvailableTrucksForOrder(Integer orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new TruckAssignmentException("Order not found with id: " + orderId));
 
         return truckRepository.findAll().stream()
                 .filter(truck -> "OK".equals(truck.getStatus()))
@@ -164,7 +168,7 @@ public class TruckService {
 
         for (Waypoint waypoint : order.getWaypoints()) {
             Cargo cargo = cargoRepository.findById(waypoint.getCargo().getId())
-                    .orElseThrow(() -> new RuntimeException("Cargo not found with id: " + waypoint.getCargo().getId()));
+                    .orElseThrow(() -> new TruckAssignmentException("Cargo not found with id: " + waypoint.getCargo().getId()));
 
             if ("loading".equals(waypoint.getType())) {
                 currentWeight += cargo.getWeight();

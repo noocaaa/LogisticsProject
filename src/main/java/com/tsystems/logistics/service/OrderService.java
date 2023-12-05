@@ -6,6 +6,8 @@ import com.tsystems.logistics.dto.OrderDTO;
 import com.tsystems.logistics.dto.DriverDTO;
 import com.tsystems.logistics.dto.WaypointDTO;
 
+import com.tsystems.logistics.exception.OrderNotFoundException;
+import com.tsystems.logistics.exception.OrderValidationException;
 import com.tsystems.logistics.repository.*;
 import org.hibernate.Hibernate;
 
@@ -72,8 +74,7 @@ public class OrderService {
         }
 
         Order existingOrder = orderRepository.findById(order.getId())
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + order.getId()));
-
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + order.getId()));
         if (!isUpdatingStatusOnly) {
             existingOrder.setTruck(order.getTruck());
             existingOrder.setDrivers(order.getDrivers());
@@ -89,10 +90,10 @@ public class OrderService {
     public void cancelOrder(Integer id) {
 
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + id));
 
         if (Boolean.TRUE.equals(order.getCompleted())) {
-            throw new RuntimeException("Completed orders cannot be cancelled.");
+            throw new OrderValidationException("Completed orders cannot be cancelled.");
         }
 
         order.setCompleted(true);
@@ -106,7 +107,7 @@ public class OrderService {
     @Transactional
     public Order getOrderById(Integer id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + id));
         Hibernate.initialize(order.getTruck());
         Hibernate.initialize(order.getDrivers());
         Hibernate.initialize(order.getWaypoints());
@@ -125,7 +126,7 @@ public class OrderService {
     @Transactional
     public void changeOrderStatus(Integer orderId, boolean completed) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
 
         order.setCompleted(completed);
         orderRepository.save(order);
@@ -135,9 +136,9 @@ public class OrderService {
     private void validateTruckForOrder(Truck truck) {
         if (truck != null) {
             Truck foundTruck = truckRepository.findById(truck.getId())
-                    .orElseThrow(() -> new RuntimeException("Truck not found with id: " + truck.getId()));
+                    .orElseThrow(() -> new OrderNotFoundException("Truck not found with id: " + truck.getId()));
             if (!"OK".equals(foundTruck.getStatus()) || !foundTruck.getOrders().isEmpty()) {
-                throw new RuntimeException("Truck is not suitable for the order.");
+                throw new OrderValidationException("Truck is not suitable for the order.");
             }
         }
     }
@@ -145,16 +146,16 @@ public class OrderService {
     private void validateDriversForOrder(Set<Driver> drivers) {
         for (Driver driver : drivers) {
             Driver foundDriver = driverRepository.findById(driver.getId())
-                    .orElseThrow(() -> new RuntimeException("Driver not found with id: " + driver.getId()));
+                    .orElseThrow(() -> new OrderNotFoundException("Driver not found with id: " + driver.getId()));
             if (foundDriver.getWorkingHours() > MAX_DRIVER_HOURS_PER_MONTH || !foundDriver.getOrders().isEmpty()) {
-                throw new RuntimeException("Driver is not suitable for the order.");
+                throw new OrderValidationException("Driver is not suitable for the order.");
             }
         }
     }
 
     private void validateWaypointsForOrder(Set<Waypoint> waypoints) {
         if (waypoints == null || waypoints.isEmpty()) {
-            throw new RuntimeException("Order must have at least one waypoint.");
+            throw new OrderValidationException("Order must have at least one waypoint.");
         }
 
         Set<Integer> cargosLoaded = waypoints.stream()
@@ -168,7 +169,7 @@ public class OrderService {
                 .collect(Collectors.toSet());
 
         if (!cargosLoaded.equals(cargosUnloaded)) {
-            throw new RuntimeException("Mismatch in loading and unloading for cargos.");
+            throw new OrderValidationException("Mismatch in loading and unloading for cargos.");
         }
     }
 
@@ -201,9 +202,9 @@ public class OrderService {
                 waypoint.setOrder(order);
 
                 City city = cityRepository.findById(waypointDTO.getCityId())
-                        .orElseThrow(() -> new RuntimeException("City not found"));
+                        .orElseThrow(() -> new OrderNotFoundException("City not found"));
                 Cargo cargo = cargoRepository.findById(waypointDTO.getCargoId())
-                        .orElseThrow(() -> new RuntimeException("Cargo not found"));
+                        .orElseThrow(() -> new OrderNotFoundException("Cargo not found"));
 
                 waypoint.setCity(city);
                 waypoint.setCargo(cargo);
@@ -267,7 +268,7 @@ public class OrderService {
     @Transactional
     public OrderDTO getOrderDTOById(Integer id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + id));
         Hibernate.initialize(order.getTruck());
         Hibernate.initialize(order.getWaypoints());
 
@@ -286,7 +287,7 @@ public class OrderService {
     @Transactional
     public boolean checkAndUpdateOrderStatus(Integer orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
 
         boolean allCargosDelivered = order.getWaypoints().stream()
                 .map(Waypoint::getCargo)
@@ -303,9 +304,9 @@ public class OrderService {
     @Transactional
     public void assignTruckToOrder(Integer orderId, Integer truckId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
         Truck truck = truckRepository.findById(truckId)
-                .orElseThrow(() -> new RuntimeException("Truck not found with id: " + truckId));
+                .orElseThrow(() -> new OrderNotFoundException("Truck not found with id: " + truckId));
 
         order.setTruck(truck);
         orderRepository.save(order);
@@ -314,14 +315,14 @@ public class OrderService {
     @Transactional
     public void assignDriversToOrder(Integer orderId, List<Integer> driverIds) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
 
         Integer truckId = order.getTruck().getId();
 
         Set<Driver> drivers = driverIds.stream()
                 .map(driverId -> {
                     Driver driver = driverRepository.findById(driverId)
-                            .orElseThrow(() -> new RuntimeException("Driver not found with id: " + driverId));
+                            .orElseThrow(() -> new OrderNotFoundException("Driver not found with id: " + driverId));
                     driver.setCurrentTruck(order.getTruck());
                     return driver;
                 })
