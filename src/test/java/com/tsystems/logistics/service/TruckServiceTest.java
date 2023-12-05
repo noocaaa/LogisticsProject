@@ -2,6 +2,9 @@ package com.tsystems.logistics.service;
 
 import static org.mockito.Mockito.*;
 
+import com.tsystems.logistics.entities.Cargo;
+import com.tsystems.logistics.entities.Waypoint;
+import com.tsystems.logistics.repository.WaypointRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -26,6 +29,9 @@ public class TruckServiceTest {
     @Mock
     private OrderRepository orderRepository;
 
+    @Mock
+    private WaypointRepository waypointRepository;
+
     @InjectMocks
     private TruckService truckService;
 
@@ -38,6 +44,7 @@ public class TruckServiceTest {
     public void addTruck_Successful() {
         Truck truck = new Truck();
         truck.setNumber("1234ABC");
+        truck.setStatus("OK");
 
         when(truckRepository.findByNumber(truck.getNumber())).thenReturn(null);
         when(truckRepository.save(any(Truck.class))).thenAnswer(i -> i.getArguments()[0]);
@@ -65,6 +72,7 @@ public class TruckServiceTest {
         Truck truck = new Truck();
         truck.setId(1);
         truck.setNumber("1234XYZ");
+        truck.setStatus("OK");
 
         when(truckRepository.findById(truck.getId())).thenReturn(Optional.of(truck));
         when(truckRepository.findByNumber(truck.getNumber())).thenReturn(null);
@@ -189,6 +197,8 @@ public class TruckServiceTest {
         when(truckRepository.findById(truckId)).thenReturn(Optional.of(truck));
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
+        truckService.getAvailableTrucksForOrder(orderId);
+
         truckService.assignTruckToOrder(truckId, orderId);
 
         assertEquals("NOK", truck.getStatus());
@@ -208,6 +218,35 @@ public class TruckServiceTest {
 
         assertEquals("Truck not found with id: " + truckId, exception.getMessage());
     }
+
+    @Test
+    void getAvailableTrucksForOrder_ReturnsAvailableTrucks() {
+        Integer orderId = 1;
+        Order order = new Order();
+        order.setId(orderId);
+
+        Truck availableTruck = new Truck();
+        availableTruck.setId(1);
+        availableTruck.setStatus("OK");
+        availableTruck.setCapacity(1);
+        availableTruck.setOrders(Collections.emptySet());
+
+        Truck unavailableTruck = new Truck();
+        unavailableTruck.setId(2);
+        unavailableTruck.setStatus("OK");
+        unavailableTruck.setCapacity(2);
+        unavailableTruck.setOrders(Collections.singleton(new Order()));
+
+        List<Truck> trucks = Arrays.asList(availableTruck, unavailableTruck);
+        when(truckRepository.findAll()).thenReturn(trucks);
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        List<Truck> result = truckService.getAvailableTrucksForOrder(orderId);
+
+        assertTrue(result.contains(availableTruck));
+        assertFalse(result.contains(unavailableTruck));
+    }
+
 
     @Test
     void assignTruckToOrder_OrderNotFound() {
@@ -267,5 +306,94 @@ public class TruckServiceTest {
 
         assertEquals("Truck is already assigned to this order.", exception.getMessage());
     }
+
+    @Test
+    void assignTruckToOrder_InsufficientCapacityForCargoWeight() {
+        Integer truckId = 1, orderId = 24;
+        Truck truck = new Truck();
+        truck.setId(truckId);
+        truck.setCapacity(1); // Capacidad del camión en toneladas.
+        truck.setStatus("OK");
+
+        Order order = new Order();
+        order.setId(orderId);
+
+        Cargo cargo = new Cargo();
+        cargo.setWeight(1100); // Peso del cargamento en kilogramos.
+
+        Waypoint loadingWaypoint = new Waypoint();
+        loadingWaypoint.setOrder(order);
+        loadingWaypoint.setCargo(cargo);
+        loadingWaypoint.setType("loading");
+
+        List<Waypoint> waypoints = Arrays.asList(loadingWaypoint);
+
+        when(truckRepository.findById(truckId)).thenReturn(Optional.of(truck));
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(waypointRepository.findByOrderId(orderId)).thenReturn(waypoints);
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            truckService.assignTruckToOrder(truckId, orderId);
+        });
+
+        assertEquals("Insufficient truck capacity for the assigned cargo.", exception.getMessage());
+    }
+
+    @Test
+    void assignTruckToOrder_TruckNotInOKStatus() {
+        Integer truckId = 1, orderId = 1;
+        Truck truck = new Truck();
+        truck.setId(truckId);
+        truck.setStatus("NOK");
+
+        Order order = new Order();
+        order.setId(orderId);
+
+        when(truckRepository.findById(truckId)).thenReturn(Optional.of(truck));
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            truckService.assignTruckToOrder(truckId, orderId);
+        });
+
+        assertEquals("Truck is not in OK status.", exception.getMessage());
+    }
+
+    @Test
+    void assignTruckToMultipleOrders_Concurrently() throws Exception {
+        Integer truckId = 1;
+        Integer orderId1 = 1;
+        Integer orderId2 = 2;
+
+        Truck truck = new Truck();
+        truck.setId(truckId);
+        truck.setStatus("OK");
+
+        Order order1 = new Order();
+        order1.setId(orderId1);
+
+        Order order2 = new Order();
+        order2.setId(orderId2);
+
+        when(truckRepository.findById(truckId)).thenReturn(Optional.of(truck));
+        when(orderRepository.findById(orderId1)).thenReturn(Optional.of(order1));
+        when(orderRepository.findById(orderId2)).thenReturn(Optional.of(order2));
+
+        // Simula la asignación concurrente.
+        Runnable task1 = () -> truckService.assignTruckToOrder(truckId, orderId1);
+        Runnable task2 = () -> truckService.assignTruckToOrder(truckId, orderId2);
+
+        Thread thread1 = new Thread(task1);
+        Thread thread2 = new Thread(task2);
+
+        thread1.start();
+        thread2.start();
+
+        thread1.join();
+        thread2.join();
+
+        // Verifica el resultado según la lógica de tu aplicación.
+    }
+
 
 }

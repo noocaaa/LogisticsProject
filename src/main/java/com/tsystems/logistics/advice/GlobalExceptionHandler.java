@@ -213,16 +213,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(OrderValidationException.class)
-    public ResponseEntity<ApiError> handleOrderValidationException(OrderValidationException ex) {
-        ApiError apiError = new ApiError(
-                HttpStatus.BAD_REQUEST,
-                "Order validation error: " + ex.getLocalizedMessage(),
-                "ORDER_VALIDATION_ERROR"
-        );
-        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
-    }
-
     @ExceptionHandler(TruckAlreadyExistsException.class)
     public ResponseEntity<ApiError> handleTruckAlreadyExistsException(TruckAlreadyExistsException ex) {
         ApiError apiError = new ApiError(

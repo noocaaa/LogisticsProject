@@ -97,7 +97,10 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form th:action="@{/orders/assignTruck/{orderId}(orderId=${order.id})}" method="post">
+                    <div th:if="${#lists.isEmpty(truckDTOs)}">
+                        <p>There are no available trucks for this order.</p>
+                    </div>
+                    <form th:if="${!#lists.isEmpty(truckDTOs)}" th:action="@{/orders/assignTruck/{orderId}(orderId=${order.id})}" method="post">
                         <select name="truckId">
                             <option value="">Select Truck</option>
                             <option th:each="truck : ${truckDTOs}"
@@ -121,7 +124,10 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form th:action="@{/orders/assignDriver/{orderId}(orderId=${order.id})}" method="post">
+                    <div th:if="${#lists.isEmpty(driverDTOs)}">
+                        <p>There are no available drivers for this order.</p>
+                    </div>
+                    <form th:if="${!#lists.isEmpty(driverDTOs)}" th:action="@{/orders/assignDriver/{orderId}(orderId=${order.id})}" method="post">
                         <select name="driverIds" multiple>
                             <option value="">Select Driver</option>
                             <option th:each="driver : ${driverDTOs}"
@@ -134,6 +140,7 @@
             </div>
         </div>
     </div>
+
 
 </div>
 </body>

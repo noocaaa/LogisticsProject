@@ -83,7 +83,7 @@ public class DistanceService {
 
     public Distance getDistanceByCities(String city1Name, String city2Name) {
         return distanceRepository.findByCity1NameAndCity2Name(city1Name, city2Name)
-                .orElseThrow(() -> new DistanceNotFoundException("Distance not found between " + city1Name + " and " + city2Name);
+                .orElseThrow(() -> new DistanceNotFoundException("Distance not found between " + city1Name + " and " + city2Name));
     }
 
 
