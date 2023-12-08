@@ -1,5 +1,8 @@
 package com.tsystems.logistics.service;
 
+import com.tsystems.logistics.dto.CityDTO;
+import com.tsystems.logistics.dto.DistanceDTO;
+import com.tsystems.logistics.entities.City;
 import com.tsystems.logistics.entities.Distance;
 import com.tsystems.logistics.entities.Waypoint;
 import com.tsystems.logistics.entities.Order;
@@ -7,18 +10,17 @@ import com.tsystems.logistics.entities.Order;
 import com.tsystems.logistics.repository.DistanceRepository;
 import com.tsystems.logistics.repository.OrderRepository;
 
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import com.tsystems.logistics.exception.DistanceNotFoundException;
 import com.tsystems.logistics.exception.DistanceAlreadyExistsException;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -72,6 +74,7 @@ public class DistanceService {
         return orderRepository.save(existingOrder);
     }
 
+    @Transactional
     public List<Distance> getAllDistances() {
         return distanceRepository.findAll();
     }
@@ -86,5 +89,39 @@ public class DistanceService {
                 .orElseThrow(() -> new DistanceNotFoundException("Distance not found between " + city1Name + " and " + city2Name));
     }
 
+    @Transactional
+    public List<DistanceDTO> getAllDistanceDTOs() {
+        List<Distance> distances = distanceRepository.findAll();
+        List<DistanceDTO> distancesDTOs = new ArrayList<>();
 
+        for (Distance distance : distances) {
+            distancesDTOs.add(convertToDTO(distance));
+        }
+
+        return distancesDTOs;
+    }
+
+
+    public DistanceDTO convertToDTO(Distance distance) {
+        if (distance == null) {
+            return null;
+        }
+
+        CityDTO city1DTO = new CityDTO(
+                distance.getCity1().getId(),
+                distance.getCity1().getName()
+        );
+
+        CityDTO city2DTO = new CityDTO(
+                distance.getCity2().getId(),
+                distance.getCity2().getName()
+        );
+
+        return new DistanceDTO(
+                distance.getId(),
+                city1DTO,
+                city2DTO,
+                distance.getDistance()
+        );
+    }
 }

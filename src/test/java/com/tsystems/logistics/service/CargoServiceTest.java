@@ -4,6 +4,7 @@ import com.tsystems.logistics.entities.Cargo;
 import com.tsystems.logistics.entities.Waypoint;
 import com.tsystems.logistics.entities.Order;
 
+import com.tsystems.logistics.exception.CargoAssignmentException;
 import com.tsystems.logistics.repository.CargoRepository;
 import com.tsystems.logistics.repository.OrderRepository;
 
@@ -232,6 +233,76 @@ public class CargoServiceTest {
 
         verify(cargoRepository).save(cargo);
         verify(orderRepository).save(order);
+    }
+
+    @Test
+    public void assignCargoToCompletedOrder_Fail() {
+        Integer cargoId = 1;
+        Integer orderId = 1;
+
+        Cargo cargo = new Cargo();
+        cargo.setId(cargoId);
+        cargo.setStatus("ready");
+
+        Order order = new Order();
+        order.setId(orderId);
+        order.setCompleted(true);
+
+        when(cargoRepository.findById(cargoId)).thenReturn(Optional.of(cargo));
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        assertThrows(CargoAssignmentException.class, () -> cargoService.assignCargoToOrder(cargoId, orderId));
+    }
+
+    @Test
+    public void deleteCargoWithWaypoints_Fail() {
+        Integer cargoId = 1;
+        Cargo cargo = new Cargo();
+        cargo.setId(cargoId);
+        Set<Waypoint> waypoints = new HashSet<>();
+        waypoints.add(new Waypoint());
+        cargo.setWaypoints(waypoints);
+
+        when(cargoRepository.findById(cargoId)).thenReturn(Optional.of(cargo));
+
+        assertThrows(CargoAssignmentException.class, () -> cargoService.deleteCargo(cargoId));
+    }
+
+    @Test
+    public void addCargo_InvalidWeight_Fail() {
+        Cargo cargo = new Cargo();
+        cargo.setId(123);
+        cargo.setWeight(-100);
+
+        assertThrows(RuntimeException.class, () -> cargoService.addCargo(cargo));
+    }
+
+    @Test
+    public void addCargo_MaxWeight_Success() {
+        Cargo cargo = new Cargo();
+        cargo.setId(320932847);
+        cargo.setWeight(Integer.MAX_VALUE);
+
+        when(cargoRepository.save(any(Cargo.class))).thenReturn(cargo);
+
+        Cargo result = cargoService.addCargo(cargo);
+
+        assertNotNull(result);
+        assertEquals(Integer.MAX_VALUE, result.getWeight());
+    }
+
+    @Test
+    public void repositoryFindById_Success() {
+        Integer cargoId = 1;
+        Cargo cargo = new Cargo();
+        cargo.setId(cargoId);
+
+        when(cargoRepository.findById(cargoId)).thenReturn(Optional.of(cargo));
+
+        Cargo result = cargoService.getCargoById(cargoId);
+
+        assertNotNull(result);
+        assertEquals(cargoId, result.getId());
     }
 
 

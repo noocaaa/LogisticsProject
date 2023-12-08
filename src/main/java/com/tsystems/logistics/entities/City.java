@@ -27,6 +27,28 @@ public class City {
     @OneToMany(mappedBy = "city")
     private Set<Waypoint> waypoints = new LinkedHashSet<>();
 
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
     public Integer getId() {
         return id;
     }
