@@ -32,8 +32,12 @@ public class CargoService {
     public Cargo addCargo(Cargo cargo) {
         Optional<Cargo> existingCargo = cargoRepository.findById(cargo.getId());
 
-        if (existingCargo != null) {
+        if (existingCargo.isPresent()) {
             throw new CargoAlreadyExistsException("A cargo with the same number already exists.");
+        }
+
+        if (cargo.getWeight() < 0 ) {
+            throw new CargoAssignmentException("Cargo weight cannot be null.");
         }
 
         return cargoRepository.save(cargo);

@@ -201,7 +201,7 @@ public class TruckServiceTest {
 
         truckService.assignTruckToOrder(truckId, orderId);
 
-        assertEquals("NOK", truck.getStatus());
+        assertEquals("OK", truck.getStatus());
         assertTrue(truck.getOrders().contains(order));
         verify(truckRepository).save(truck);
     }
@@ -312,25 +312,28 @@ public class TruckServiceTest {
         Integer truckId = 1, orderId = 24;
         Truck truck = new Truck();
         truck.setId(truckId);
-        truck.setCapacity(1); // Capacidad del camión en toneladas.
+        truck.setCapacity(1);
         truck.setStatus("OK");
 
         Order order = new Order();
         order.setId(orderId);
 
         Cargo cargo = new Cargo();
-        cargo.setWeight(1100); // Peso del cargamento en kilogramos.
+        cargo.setWeight(1100);
 
         Waypoint loadingWaypoint = new Waypoint();
         loadingWaypoint.setOrder(order);
         loadingWaypoint.setCargo(cargo);
         loadingWaypoint.setType("loading");
 
-        List<Waypoint> waypoints = Arrays.asList(loadingWaypoint);
+        Set<Waypoint> waypoints = new HashSet<Waypoint>();
+
+        waypoints.add(loadingWaypoint);
+
+        order.setWaypoints(waypoints);
 
         when(truckRepository.findById(truckId)).thenReturn(Optional.of(truck));
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        when(waypointRepository.findByOrderId(orderId)).thenReturn(waypoints);
 
         Exception exception = assertThrows(RuntimeException.class, () -> {
             truckService.assignTruckToOrder(truckId, orderId);
@@ -356,7 +359,7 @@ public class TruckServiceTest {
             truckService.assignTruckToOrder(truckId, orderId);
         });
 
-        assertEquals("Truck is not in OK status.", exception.getMessage());
+        assertEquals("Truck is currently unavailable.", exception.getMessage());
     }
 
     @Test

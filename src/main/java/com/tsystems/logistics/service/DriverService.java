@@ -89,7 +89,7 @@ public class DriverService {
         }
 
         if (!validStatuses.contains(driver.getStatus())) {
-            throw new InvalidDriverStatusException("Invalid status. Status must be either 'rest' or 'driving'.");
+            throw new InvalidDriverStatusException("Invalid status.");
         }
 
         existingDriver.setName(driver.getName());

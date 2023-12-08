@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -111,8 +112,22 @@ public class TruckService {
         if (truck.getOrders() == null) {
             truck.setOrders(new HashSet<>());
         }
+
+        Set<Waypoint> waypoints = order.getWaypoints();
+        int totalCargoWeight = 0;
+        for (Waypoint wp : waypoints) {
+            if ("loading".equals(wp.getType())) {
+                totalCargoWeight += wp.getCargo().getWeight();
+            } else if ("unloading".equals(wp.getType())) {
+                totalCargoWeight -= wp.getCargo().getWeight();
+            }
+
+            if (truck.getCapacity() < totalCargoWeight) {
+                throw new TruckAssignmentException("Insufficient truck capacity for the assigned cargo.");
+            }
+        }
+
         truck.getOrders().add(order);
-        truck.setStatus("NOK");
 
         truckRepository.save(truck);
     }

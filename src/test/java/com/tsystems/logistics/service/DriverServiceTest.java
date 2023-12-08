@@ -53,6 +53,8 @@ class DriverServiceTest {
         when(driverRepository.findByPersonalNumber("12345")).thenReturn(Optional.empty());
         when(driverRepository.save(any(Driver.class))).thenReturn(driver);
 
+        driver.setStatus("REST");
+
         Driver savedDriver = driverService.addDriver(driver);
 
         assertNotNull(savedDriver);
@@ -75,6 +77,8 @@ class DriverServiceTest {
         when(driverRepository.findById(1)).thenReturn(Optional.of(driver));
         when(driverRepository.findByPersonalNumber("12345")).thenReturn(Optional.empty());
         when(driverRepository.save(any(Driver.class))).thenReturn(driver);
+
+        driver.setStatus("SECOND_DRIVER");
 
         Driver updatedDriver = driverService.updateDriver(driver);
 
@@ -117,9 +121,11 @@ class DriverServiceTest {
 
     @Test
     void updateDriver_ThrowsException_IfWorkingHoursExceedLimit() {
-        driver.setWorkingHours(61);
+        driver.setWorkingHours(180);
+        driver.setStatus("REST");
 
         when(driverRepository.findById(1)).thenReturn(Optional.of(driver));
+
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> driverService.updateDriver(driver));
 

@@ -39,8 +39,6 @@ public class OrderService {
     private final DriverService driverService;
     private final WaypointService waypointService;
 
-    private Set<Waypoint> waypoints;
-
     private final int MAX_DRIVER_HOURS_PER_MONTH = 176;
 
     @Transactional
@@ -67,14 +65,15 @@ public class OrderService {
 
     @Transactional
     public Order updateOrder(Order order, boolean isUpdatingStatusOnly) {
+        Order existingOrder = orderRepository.findById(order.getId())
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + order.getId()));
+
         if (!isUpdatingStatusOnly) {
             validateTruckForOrder(order.getTruck());
             validateDriversForOrder(order.getDrivers());
             validateWaypointsForOrder(order.getWaypoints());
         }
 
-        Order existingOrder = orderRepository.findById(order.getId())
-                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + order.getId()));
         if (!isUpdatingStatusOnly) {
             existingOrder.setTruck(order.getTruck());
             existingOrder.setDrivers(order.getDrivers());
@@ -127,6 +126,10 @@ public class OrderService {
     public void changeOrderStatus(Integer orderId, boolean completed) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
+
+        if (completed == order.getCompleted()) {
+            throw new OrderNotFoundException("Order is already in the specified state.");
+        }
 
         order.setCompleted(completed);
         orderRepository.save(order);

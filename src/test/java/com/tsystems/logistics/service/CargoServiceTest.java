@@ -45,7 +45,7 @@ public class CargoServiceTest {
         cargo.setWeight(1000);
         cargo.setStatus("ready");
 
-        when(cargoRepository.findById(cargo.getId())).thenReturn(null);
+        when(cargoRepository.findById(cargo.getId())).thenReturn(Optional.empty());
         when(cargoRepository.save(any(Cargo.class))).thenReturn(cargo);
 
         Cargo result = cargoService.addCargo(cargo);
@@ -274,7 +274,9 @@ public class CargoServiceTest {
         cargo.setId(123);
         cargo.setWeight(-100);
 
-        assertThrows(RuntimeException.class, () -> cargoService.addCargo(cargo));
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> cargoService.addCargo(cargo));
+
+        assertEquals("Cargo weight cannot be null.", exception.getMessage());
     }
 
     @Test
