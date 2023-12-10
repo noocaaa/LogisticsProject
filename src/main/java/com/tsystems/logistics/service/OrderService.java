@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 import java.util.Set;
 
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -221,6 +223,10 @@ public class OrderService {
 
 
     public OrderDTO convertOrderToDTO(Order order) {
+        Hibernate.initialize(order.getTruck());
+        Hibernate.initialize(order.getDrivers());
+        Hibernate.initialize(order.getWaypoints());
+
         OrderDTO dto = new OrderDTO();
         dto.setId(order.getId());
         dto.setCompleted(order.getCompleted());
@@ -324,6 +330,12 @@ public class OrderService {
         orderRepository.save(order);
     }
 
+
+    @Transactional
+    public Page<OrderDTO> getOrderPageDTO(Pageable pageable) {
+        Page<Order> orders = orderRepository.findAll(pageable);
+        return orders.map(this::convertOrderToDTO);
+    }
 
 
 }

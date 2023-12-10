@@ -9,6 +9,8 @@ import com.tsystems.logistics.entities.Order;
 import com.tsystems.logistics.entities.Truck;
 import com.tsystems.logistics.service.CargoService;
 import com.tsystems.logistics.service.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,10 +43,18 @@ public class OrderController {
     @Autowired
     private CargoService cargoService;
 
+
     @GetMapping
-    public String ordersPage(Model model) {
-        List<OrderDTO> orderDTOs = orderService.getAllOrderDTOs();
-        model.addAttribute("orders", orderDTOs);
+    public String orderPage(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size,
+            Model model) {
+
+        Page<OrderDTO> orderPageDTO = orderService.getOrderPageDTO(PageRequest.of(page, size));
+
+        model.addAttribute("orders", orderPageDTO.getContent());
+        model.addAttribute("currentPage", orderPageDTO.getNumber());
+        model.addAttribute("totalPages", orderPageDTO.getTotalPages());
         return "orders";
     }
 

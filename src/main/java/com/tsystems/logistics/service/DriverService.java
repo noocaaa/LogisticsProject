@@ -19,6 +19,8 @@ import java.time.Duration;
 
 import com.tsystems.logistics.dto.OrderDTO;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -392,6 +394,11 @@ public class DriverService {
 
     private int calculateTimeFromDistance(int distance) {
         return (distance / AVERAGE_SPEED) * 60;
+    }
+
+    @Transactional
+    public Page<Driver> getOrderPage(Pageable pageable) {
+        return driverRepository.findAll(pageable);
     }
 
 }
