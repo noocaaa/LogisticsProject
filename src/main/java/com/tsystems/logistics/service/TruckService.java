@@ -33,6 +33,10 @@ public class TruckService {
     private final OrderRepository orderRepository;
     private final CargoRepository cargoRepository;
 
+    public boolean isNumberValid(String number) {
+        return number.matches("\\d{4}[A-Za-z]{3}");
+    }
+
     @Transactional
     public Truck addTruck(Truck truck) {
 
@@ -43,6 +47,10 @@ public class TruckService {
         String status = truck.getStatus();
         if (!(status.equals("OK") || status.equals("NOK"))) {
             throw new TruckAssignmentException("Invalid truck status. Status must be 'OK' or 'NOK'.");
+        }
+
+        if (!isNumberValid(truck.getNumber())) {
+            throw new TruckAssignmentException("The truck number should be 4 digits and 3 letters");
         }
 
         return truckRepository.save(truck);
@@ -64,6 +72,9 @@ public class TruckService {
             throw new TruckAssignmentException("Invalid truck status. Status must be 'OK' or 'NOK'.");
         }
 
+        if (!isNumberValid(truck.getNumber())) {
+            throw new TruckAssignmentException("The truck number should be 4 digits and 3 letters");
+        }
         existingTruck.setNumber(truck.getNumber());
         existingTruck.setCapacity(truck.getCapacity());
         existingTruck.setStatus(truck.getStatus());
@@ -177,6 +188,7 @@ public class TruckService {
                 .filter(truck -> isTruckAvailable(truck))
                 .collect(Collectors.toList());
     }
+
     private boolean canTruckHandleOrder(Truck truck, Order order) {
         int maxNetWeight = 0;
         int currentWeight = 0;
@@ -194,7 +206,7 @@ public class TruckService {
             maxNetWeight = Math.max(maxNetWeight, currentWeight);
         }
 
-        return maxNetWeight <= truck.getCapacity();
+        return maxNetWeight <= truck.getCapacity() * 1000; //convert to kilos
     }
 
     private boolean isTruckAvailable(Truck truck) {

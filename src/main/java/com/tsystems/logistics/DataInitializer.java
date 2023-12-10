@@ -22,7 +22,7 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         // User user = new User();
         // user.setUsername("jhondoe@gmail.com");
-        // user.setPassword(passwordEncoder.encode("House1234")); // Codificar la contraseña
+        // user.setPassword(passwordEncoder.encode("House1234"));
         // user.setEnabled(true);
 
         // userRepository.save(user);
@@ -32,11 +32,10 @@ public class DataInitializer implements CommandLineRunner {
                 "12345156", "123", "456", "789"
         );
 
-        // Generar y guardar usuarios para cada conductor
         driverUsernames.forEach(username -> {
             User user = new User();
             user.setUsername(username);
-            user.setPassword(passwordEncoder.encode("password")); // Reemplazar "password" con una contraseña segura
+            user.setPassword(passwordEncoder.encode("password")); /
             user.setEnabled(true);
 
             userRepository.save(user);

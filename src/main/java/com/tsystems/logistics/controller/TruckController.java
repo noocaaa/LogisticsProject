@@ -10,6 +10,7 @@ import com.tsystems.logistics.dto.TruckDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 import org.springframework.stereotype.Controller;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Controller
+@PreAuthorize("hasAuthority('ROLE_EMPLOYEE')")
 @RequestMapping("/trucks")
 public class TruckController {
 
@@ -36,7 +38,6 @@ public class TruckController {
         model.addAttribute("trucks", trucks);
         return "trucks";
     }
-
 
     @GetMapping("/edit/{id}")
     public String showEditForm(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {

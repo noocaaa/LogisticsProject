@@ -1,19 +1,11 @@
 package com.tsystems.logistics.service;
 
-import com.tsystems.logistics.entities.Distance;
-import com.tsystems.logistics.entities.Driver;
-import com.tsystems.logistics.entities.Truck;
+import com.tsystems.logistics.entities.*;
 import com.tsystems.logistics.exception.DriverAlreadyExistsException;
 import com.tsystems.logistics.exception.DriverAssignmentException;
 import com.tsystems.logistics.exception.DriverNotFoundException;
 import com.tsystems.logistics.exception.InvalidDriverStatusException;
-import com.tsystems.logistics.repository.DriverRepository;
-import com.tsystems.logistics.repository.OrderRepository;
-import com.tsystems.logistics.repository.WaypointRepository;
-import com.tsystems.logistics.repository.TruckRepository;
-import com.tsystems.logistics.repository.DistanceRepository;
-
-import org.hibernate.Hibernate;
+import com.tsystems.logistics.repository.*;
 
 import com.tsystems.logistics.dto.DriverDTO;
 import com.tsystems.logistics.dto.WaypointDTO;
@@ -26,7 +18,6 @@ import java.time.Instant;
 import java.time.Duration;
 
 import com.tsystems.logistics.dto.OrderDTO;
-import com.tsystems.logistics.entities.Order;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,12 +34,17 @@ public class DriverService {
     private final WaypointRepository waypointRepository;
     private final OrderRepository orderRepository;
     private final DistanceRepository distanceRepository;
+    private final UserRepository userRepository;
 
+    private final AuthorityService authorityService;
     private final TruckService truckService;
 
     private final int AVERAGE_SPEED = 100;
+
     private final int MAX_WORKING_HOURS = 176;
+
     private final List<String> validStatuses = Arrays.asList("REST", "DRIVING", "SECOND_DRIVER", "LOADING_UNLOADING" );
+    private final UserService userService;
 
     @Transactional
     public Driver addDriver(Driver driver) {
@@ -64,6 +60,12 @@ public class DriverService {
         if (!driver.getPersonalNumber().matches("\\d+")) {
             throw new InvalidDriverStatusException("Personal number should only contain numbers.");
         }
+
+        userService.addDriver(driver.getPersonalNumber());
+
+        User user = userRepository.findUserByUsername(driver.getPersonalNumber());
+
+        authorityService.addAuthority(user, "ROLE_DRIVER");
 
         return driverRepository.save(driver);
     }
@@ -170,10 +172,6 @@ public class DriverService {
                 .orElseThrow(() -> new DriverNotFoundException("Driver not found with username: " + username));
     }
 
-    public List<Driver> getCoDrivers(Integer truckId) {
-        return driverRepository.findByCurrentTruckId(truckId);
-    }
-
     public DriverDTO convertToDTO(Driver driver) {
         DriverDTO dto = new DriverDTO();
         dto.setId(driver.getId());
@@ -230,13 +228,6 @@ public class DriverService {
             return driverDTO;
         }).collect(Collectors.toSet()));
         return dto;
-    }
-
-    private String getTruckNumberForDriver(Driver driver) {
-        if (driver.getCurrentTruck() != null) {
-            return driver.getCurrentTruck().getNumber();
-        }
-        return null;
     }
 
     public List<String> getCoDriverNamesForTruck(Integer truckId, String excludePersonalNumber) {
@@ -401,11 +392,6 @@ public class DriverService {
 
     private int calculateTimeFromDistance(int distance) {
         return (distance / AVERAGE_SPEED) * 60;
-    }
-
-    private boolean isDriverAvailable(Driver driver, int travelTime) {
-        int totalHours = driver.getWorkingHours() + (travelTime / 60);
-        return totalHours <= 176;
     }
 
 }

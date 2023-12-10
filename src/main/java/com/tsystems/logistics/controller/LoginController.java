@@ -8,6 +8,7 @@ import com.tsystems.logistics.dto.DriverDTO;
 import com.tsystems.logistics.dto.CityDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -56,14 +57,19 @@ public class LoginController {
         return "redirect:/dashboard";
     }
 
-    @GetMapping("/login")
-    public String login() {
-        return "minelogin";
-    }
-
     @GetMapping("/home")
     public String home() {
         return "dashboard";
+    }
+
+    @GetMapping("/403")
+    public String forbidden() {
+        return "403";
+    }
+
+    @GetMapping("/login")
+    public String login() {
+        return "minelogin";
     }
 
     @GetMapping("/dashboard")
@@ -139,6 +145,12 @@ public class LoginController {
             if ("Uploaded".equals(orderStatus)) {
                 cargo.setStatus("shipped");
             } else if ("Unloaded".equals(orderStatus)) {
+                if ("shipped".equals(cargo.getStatus())) {
+                    cargo.setStatus("delivered");
+                } else {
+                    redirectAttributes.addFlashAttribute("error", "Cargo must be shipped before it can be delivered");
+                    return "redirect:/dashboard";
+                }
                 cargo.setStatus("delivered");
             }
             cargoService.updateCargo(cargo);
@@ -157,10 +169,12 @@ public class LoginController {
         }
     }
 
+    @PreAuthorize("hasAuthority('ROLE_EMPLOYEE')")
     @GetMapping("/planning")
     public String planning() {
         return "template";
     }
+
     @ResponseBody
     @GetMapping("/api/cities")
     public List<CityDTO> apicities() {

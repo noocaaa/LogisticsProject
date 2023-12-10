@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 public class UserPrincipal implements UserDetails {
     private final User user;
+
     private final Set<GrantedAuthority> authorities;
 
     public UserPrincipal(User user) {
@@ -24,7 +25,12 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+        if (user.getAuthorities() != null) {
+            return user.getAuthorities().stream()
+                    .map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
+                    .collect(Collectors.toSet());
+        }
+        return new HashSet<>();
     }
 
     @Override
@@ -56,5 +62,4 @@ public class UserPrincipal implements UserDetails {
     public boolean isEnabled() {
         return user.getEnabled();
     }
-
 }

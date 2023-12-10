@@ -6,7 +6,6 @@ import com.tsystems.logistics.entities.Cargo;
 
 import com.tsystems.logistics.dto.WaypointDTO;
 
-
 import com.tsystems.logistics.exception.InvalidCargoForWaypointException;
 import com.tsystems.logistics.exception.InvalidCityForWaypointException;
 import com.tsystems.logistics.exception.InvalidWaypointTypeException;
@@ -116,9 +115,5 @@ public class WaypointService {
         dto.setType(waypoint.getType());
 
         return dto;
-    }
-
-    private String getCityName(Waypoint waypoint) {
-        return waypoint.getCity().getName();
     }
 }

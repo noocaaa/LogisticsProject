@@ -14,10 +14,4 @@ public interface TruckRepository extends JpaRepository<Truck, Integer> {
 
     int countByStatus(String status);
 
-    List<Truck> findByNumberAndCapacityAndStatusAndCurrentCity(
-            String number,
-            Integer capacity,
-            String status,
-            String city
-    );
 }

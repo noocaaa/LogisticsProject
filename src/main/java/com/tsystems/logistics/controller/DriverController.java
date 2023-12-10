@@ -3,13 +3,12 @@ package com.tsystems.logistics.controller;
 import com.tsystems.logistics.dto.CityDTO;
 import com.tsystems.logistics.entities.City;
 import com.tsystems.logistics.entities.Driver;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import com.tsystems.logistics.service.DriverService;
 import com.tsystems.logistics.service.CityService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-
-import org.springframework.http.ResponseEntity;
 
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +21,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Controller
+@PreAuthorize("hasAuthority('ROLE_EMPLOYEE')")
 @RequestMapping("/drivers")
 public class DriverController {
 

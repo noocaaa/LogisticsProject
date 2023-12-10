@@ -37,6 +37,8 @@
             <p th:text="${error}"></p>
         </div>
 
+        <button class="btn btn-primary mb-3" onclick="location.href='/cargos/add'">Add Cargo</button>
+
         <table class="table table-hover">
             <thead>
             <tr>
@@ -45,6 +47,7 @@
                 <th>Weight</th>
                 <th>Status</th>
                 <th>Assign to Order</th>
+                <th>Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -60,6 +63,16 @@
                             <option th:each="order : ${orders}" th:value="${order.id}" th:text="${order.getId()}"></option>
                         </select>
                         <button type="submit" class="btn btn-primary btn-sm" style="background-color: green">Assign</button>
+                    </form>
+                </td>
+                <td>
+                    <a th:href="@{/cargos/edit/{id}(id=${cargo.id})}" class="btn btn-warning btn-sm">
+                        <i class="icon fas fa-edit"></i> Edit
+                    </a>
+                    <form th:action="@{/cargos/delete/{id}(id=${cargo.id})}" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="icon fas fa-trash-alt"></i> Delete
+                        </button>
                     </form>
                 </td>
             </tr>

@@ -21,8 +21,6 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -235,28 +233,6 @@ public class OrderService {
         return dto;
     }
 
-    public WaypointDTO convertWaypointToDTO(Waypoint waypoint) {
-        WaypointDTO dto = new WaypointDTO();
-        dto.setId(waypoint.getId());
-        dto.setCityId(waypoint.getCity().getId());
-        dto.setCargoId(waypoint.getCargo().getId());
-        dto.setType(waypoint.getType());
-        return dto;
-    }
-
-    private Driver convertDriverDTOtoEntity(DriverDTO driverDTO) {
-        Driver driver = new Driver();
-        driver.setId(driverDTO.getId());
-        driver.setName(driverDTO.getName());
-        driver.setSurname(driverDTO.getSurname());
-        driver.setPersonalNumber(driverDTO.getPersonalNumber());
-        driver.setWorkingHours(driverDTO.getWorkingHours());
-        driver.setStatus(driverDTO.getStatus());
-        driver.setCurrentCity(driverDTO.getCurrentCity());
-        driver.setCurrentTruck(truckService.convertToEntity(driverDTO.getCurrentTruck()));
-        return driver;
-    }
-
     @Transactional
     public List<OrderDTO> getAllOrderDTOs() {
         List<Order> orders = orderRepository.findAll();
@@ -285,7 +261,6 @@ public class OrderService {
 
         return orderDTO;
     }
-
 
     @Transactional
     public boolean checkAndUpdateOrderStatus(Integer orderId) {

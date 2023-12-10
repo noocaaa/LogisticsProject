@@ -2,7 +2,6 @@ package com.tsystems.logistics.service;
 
 import com.tsystems.logistics.dto.CityDTO;
 import com.tsystems.logistics.dto.DistanceDTO;
-import com.tsystems.logistics.entities.City;
 import com.tsystems.logistics.entities.Distance;
 import com.tsystems.logistics.entities.Waypoint;
 import com.tsystems.logistics.entities.Order;
@@ -10,7 +9,6 @@ import com.tsystems.logistics.entities.Order;
 import com.tsystems.logistics.repository.DistanceRepository;
 import com.tsystems.logistics.repository.OrderRepository;
 
-import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +17,6 @@ import java.util.*;
 
 import com.tsystems.logistics.exception.DistanceNotFoundException;
 import com.tsystems.logistics.exception.DistanceAlreadyExistsException;
-
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
