@@ -3,12 +3,14 @@ package com.tsystems.logistics.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.tsystems.logistics.entities.User;
 import com.tsystems.logistics.repository.DriverRepository;
 import com.tsystems.logistics.repository.TruckRepository;
 
 import com.tsystems.logistics.entities.Driver;
 import com.tsystems.logistics.entities.Truck;
 
+import com.tsystems.logistics.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -25,6 +27,15 @@ class DriverServiceTest {
 
     @Mock
     private TruckRepository truckRepository;
+
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private AuthorityService authorityService;
 
     @InjectMocks
     private DriverService driverService;
@@ -46,6 +57,9 @@ class DriverServiceTest {
         truck = new Truck();
         truck.setId(1);
         truck.setCurrentCity("Granada");
+
+        doNothing().when(userService).addDriver(anyString());
+        doNothing().when(authorityService).addAuthority(any(User.class), anyString());
     }
 
     @Test
@@ -60,6 +74,7 @@ class DriverServiceTest {
         assertNotNull(savedDriver);
         assertEquals(driver.getPersonalNumber(), savedDriver.getPersonalNumber());
     }
+
 
     @Test
     void addDriver_ThrowsException_IfPersonalNumberInUse() {

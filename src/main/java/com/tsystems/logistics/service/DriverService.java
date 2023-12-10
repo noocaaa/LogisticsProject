@@ -48,7 +48,7 @@ public class DriverService {
 
     private final List<String> validStatuses = Arrays.asList("REST", "DRIVING", "SECOND_DRIVER", "LOADING_UNLOADING" );
     private final UserService userService;
-    
+
     @Transactional
     public Driver addDriver(Driver driver) {
         driverRepository.findByPersonalNumber(driver.getPersonalNumber())
