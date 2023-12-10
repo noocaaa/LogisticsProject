@@ -8,6 +8,8 @@ import com.tsystems.logistics.exception.InvalidDriverStatusException;
 import com.tsystems.logistics.repository.CargoRepository;
 import com.tsystems.logistics.repository.OrderRepository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -139,6 +141,11 @@ public class CargoService {
         return cargos.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    public Page<CargoDTO> getCargoPage(Pageable pageable) {
+        return cargoRepository.findAll(pageable)
+                .map(this::convertToDTO);
     }
 
 }

@@ -1,8 +1,11 @@
 package com.tsystems.logistics.controller;
 
 import com.tsystems.logistics.dto.CityDTO;
+import com.tsystems.logistics.dto.OrderDTO;
 import com.tsystems.logistics.entities.City;
 import com.tsystems.logistics.entities.Driver;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import com.tsystems.logistics.service.DriverService;
@@ -32,12 +35,18 @@ public class DriverController {
     private CityService cityService;
 
     @GetMapping
-    public String driversPage(Model model) {
-        List<Driver> drivers = driverService.getAllDrivers();
-        model.addAttribute("drivers", drivers);
+    public String driversPage(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size,
+            Model model) {
+
+        Page<Driver> drivers = driverService.getOrderPage(PageRequest.of(page, size));
+
+        model.addAttribute("drivers", drivers.getContent());
+        model.addAttribute("currentPage", drivers.getNumber());
+        model.addAttribute("totalPages", drivers.getTotalPages());
         return "drivers";
     }
-
 
     @GetMapping("/add")
     public String addDriverForm(Model model, RedirectAttributes redirectAttributes) {

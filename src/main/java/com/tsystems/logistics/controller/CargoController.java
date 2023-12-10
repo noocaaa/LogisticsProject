@@ -6,6 +6,8 @@ import com.tsystems.logistics.entities.Cargo;
 import com.tsystems.logistics.service.CargoService;
 import com.tsystems.logistics.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.ui.Model;
@@ -27,15 +29,18 @@ public class CargoController {
     private OrderService orderService;
 
     @GetMapping
-    public String cargosPage(Model model) {
-        List<Cargo> cargos = cargoService.getAllCargos();
-        List<OrderDTO> orderDTOs = orderService.getAllOrderDTOs();
-        List<CargoDTO> cargoDTOs = cargos.stream()
-                .map(cargoService::convertToDTO)
-                .collect(Collectors.toList());
+    public String cargosPage(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
 
-        model.addAttribute("cargos", cargoDTOs);
+        List<OrderDTO> orderDTOs = orderService.getAllOrderDTOs();
+        Page<CargoDTO> cargoPage = cargoService.getCargoPage(PageRequest.of(page, size));
+
+        model.addAttribute("cargos", cargoPage.getContent());
         model.addAttribute("orders", orderDTOs);
+        model.addAttribute("currentPage", cargoPage.getNumber());
+        model.addAttribute("totalPages", cargoPage.getTotalPages());
 
         return "cargo";
     }

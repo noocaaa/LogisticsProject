@@ -27,7 +27,7 @@
       <li><button class="sidebar-button" onclick="location.href='/orders'">Orders</button></li>
       <li><button class="sidebar-button" onclick="location.href='/cargos'">Cargo Assigment</button></li>
       <li><button class="sidebar-button" onclick="location.href='/planning'">Planning and Routing</button></li>
-d    </ul>
+    </ul>
   </nav>
 
   <div class="content">
@@ -66,6 +66,27 @@ d    </ul>
       </tr>
       </tbody>
     </table>
+
+    <nav aria-label="Page navigation">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+          <a class="page-link" th:href="@{/trucks(page=${currentPage - 1}, size=${size})}" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+
+        <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}" class="page-item" th:classappend="${i == currentPage} ? 'active' : ''">
+          <a class="page-link" th:href="@{/trucks(page=${i}, size=${size})}" th:text="${i + 1}"></a>
+        </li>
+
+        <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled' : ''">
+          <a class="page-link" th:href="@{/trucks(page=${currentPage + 1}, size=${size})}" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
   </div>
 
 </div>

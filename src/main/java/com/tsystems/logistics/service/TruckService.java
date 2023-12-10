@@ -16,6 +16,8 @@ import com.tsystems.logistics.repository.CargoRepository;
 
 import com.tsystems.logistics.dto.TruckDTO;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -211,6 +213,10 @@ public class TruckService {
 
     private boolean isTruckAvailable(Truck truck) {
         return truck.getOrders() == null || truck.getOrders().isEmpty();
+    }
+
+    public Page<Truck> getTrucksPage(String search, Pageable pageable) {
+        return truckRepository.findByNumberContaining(search, pageable);
     }
 
 }

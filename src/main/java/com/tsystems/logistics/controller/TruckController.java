@@ -9,7 +9,8 @@ import com.tsystems.logistics.service.CityService;
 import com.tsystems.logistics.dto.TruckDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
@@ -32,12 +33,23 @@ public class TruckController {
     @Autowired
     private CityService cityService;
 
+
     @GetMapping
-    public String trucksPage(Model model) {
-        List<Truck> trucks = truckService.getAllTrucks();
-        model.addAttribute("trucks", trucks);
+    public String trucksPage(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size,
+            @RequestParam(defaultValue = "") String search,
+            Model model) {
+
+        Page<Truck> truckPage = truckService.getTrucksPage(search, PageRequest.of(page, size));
+        model.addAttribute("trucks", truckPage.getContent());
+        model.addAttribute("currentPage", truckPage.getNumber());
+        model.addAttribute("totalPages", truckPage.getTotalPages());
+        model.addAttribute("search", search);
+
         return "trucks";
     }
+
 
     @GetMapping("/edit/{id}")
     public String showEditForm(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
