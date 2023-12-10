@@ -34,6 +34,8 @@ public class CustomUserDetailsService implements UserDetailsService {
                             .map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
                             .collect(Collectors.toSet());
 
+                    grantedAuthorities.forEach(authority -> System.out.println(authority.getAuthority()));
+
                     return new UserPrincipal(user);
                 })
                 .orElseThrow(() -> new UsernameNotFoundException("Username " + username + " not found"));

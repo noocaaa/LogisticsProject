@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import java.util.Optional;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import java.util.Set;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -18,6 +20,17 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public void addDriver(String personalID) {
+        User user = new User();
+
+        user.setUsername(personalID);
+        user.setPassword(passwordEncoder.encode("password"));
+        user.setEnabled(true);
+
+        userRepository.save(user);
+    }
 
     public Set<String> getUserRoles(String username) {
         Optional<User> userOptional = userRepository.findByUsername(username);

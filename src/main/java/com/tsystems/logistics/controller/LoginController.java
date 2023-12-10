@@ -1,24 +1,19 @@
 package com.tsystems.logistics.controller;
-import com.tsystems.logistics.service.UserService;
+import com.tsystems.logistics.dto.DistanceDTO;
+import com.tsystems.logistics.service.*;
 
-import com.tsystems.logistics.entities.Waypoint;
-import com.tsystems.logistics.entities.Cargo;
-import com.tsystems.logistics.entities.Order;
+import com.tsystems.logistics.entities.*;
 
 import com.tsystems.logistics.dto.DriverDTO;
+import com.tsystems.logistics.dto.CityDTO;
 
-import com.tsystems.logistics.service.WaypointService;
-import com.tsystems.logistics.service.CargoService;
-import com.tsystems.logistics.service.DriverService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.tsystems.logistics.service.DriversorderService;
-import com.tsystems.logistics.service.OrderService;
-import com.tsystems.logistics.service.TruckService;
 import java.security.Principal;
 import java.util.*;
 
@@ -28,12 +23,19 @@ import java.util.stream.Collectors;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
+import java.util.ArrayList;
 
 @Controller
 public class LoginController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private CityService cityService;
+
+    @Autowired
+    private DistanceService distanceService;
 
     @Autowired
     private TruckService truckService;
@@ -50,22 +52,24 @@ public class LoginController {
     @Autowired
     private WaypointService waypointService;
 
-    @Autowired
-    private DriversorderService driversorderService;
-
     @GetMapping("/")
     public String root() {
         return "redirect:/dashboard";
     }
 
-    @GetMapping("/login")
-    public String login() {
-        return "minelogin";
-    }
-
     @GetMapping("/home")
     public String home() {
         return "dashboard";
+    }
+
+    @GetMapping("/403")
+    public String forbidden() {
+        return "403";
+    }
+
+    @GetMapping("/login")
+    public String login() {
+        return "minelogin";
     }
 
     @GetMapping("/dashboard")
@@ -141,6 +145,12 @@ public class LoginController {
             if ("Uploaded".equals(orderStatus)) {
                 cargo.setStatus("shipped");
             } else if ("Unloaded".equals(orderStatus)) {
+                if ("shipped".equals(cargo.getStatus())) {
+                    cargo.setStatus("delivered");
+                } else {
+                    redirectAttributes.addFlashAttribute("error", "Cargo must be shipped before it can be delivered");
+                    return "redirect:/dashboard";
+                }
                 cargo.setStatus("delivered");
             }
             cargoService.updateCargo(cargo);
@@ -159,13 +169,30 @@ public class LoginController {
         }
     }
 
-    @GetMapping("/ordersAndTruck")
-    public String ordersAndTruckPage() {
-        return "ordersAndTruck";
+    @PreAuthorize("hasAuthority('ROLE_EMPLOYEE')")
+    @GetMapping("/planning")
+    public String planning() {
+        return "template";
     }
 
-    @GetMapping("/settings")
-    public String settingsPage() {
-        return "settings";
+    @ResponseBody
+    @GetMapping("/api/cities")
+    public List<CityDTO> apicities() {
+        List<City> cities= cityService.getAllCities();
+        List<CityDTO> cityDTOs = new ArrayList<>();
+
+        for (City city : cities) {
+            cityDTOs.add(cityService.convertToDTO(city));
+        }
+
+        return cityDTOs;
     }
+
+    @ResponseBody
+    @GetMapping("/api/distances")
+    public List<DistanceDTO> apidistance() {
+        return distanceService.getAllDistanceDTOs();
+    }
+
+
 }

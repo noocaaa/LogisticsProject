@@ -1,5 +1,6 @@
 package com.tsystems.logistics.service;
 
+import com.tsystems.logistics.dto.CityDTO;
 import com.tsystems.logistics.entities.City;
 import com.tsystems.logistics.repository.CityRepository;
 
@@ -54,4 +55,10 @@ public class CityService {
     public City getCityByName(String name) {
         return cityRepository.findByName(name);
     }
+
+    public CityDTO convertToDTO(City city) {
+        CityDTO dto = new CityDTO(city.getId(), city.getName(), city.getLatitude(), city.getLongitude());
+        return dto;
+    }
+
 }

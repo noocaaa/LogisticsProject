@@ -157,16 +157,17 @@ class OrderServiceTest {
 
     @Test
     void updateOrder_Failure_OrderNotFound() {
-        Integer orderId = 1;
+        Integer orderId = 6788;
         Order order = new Order();
         order.setId(orderId);
+
         when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             orderService.updateOrder(order, false);
         });
 
-        assertEquals("Order not found with id: " + 1 , exception.getMessage());
+        assertEquals("Order not found with id: " + 6788 , exception.getMessage());
     }
 
     @Test
@@ -391,7 +392,7 @@ class OrderServiceTest {
             orderService.createOrder(order);
         });
 
-        assertEquals("Mismatch in loading and unloading counts for cargo: " + 1, exception.getMessage());
+        assertEquals("Mismatch in loading and unloading for cargos.", exception.getMessage());
     }
 
 

@@ -9,6 +9,8 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" th:href="@{/css/libraryStyles.css}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
 </head>
 
 <body>
@@ -27,13 +29,98 @@
             <li><button class="sidebar-button" onclick="location.href='/orders'">Orders</button></li>
             <li><button class="sidebar-button" onclick="location.href='/cargos'">Cargo Assigment</button></li>
             <li><button class="sidebar-button" onclick="location.href='/planning'">Planning and Routing</button></li>
-            <li><button class="sidebar-button" onclick="location.href='/settings'">Settings</button></li>
         </ul>
     </nav>
 
     <div class="content">
+        <div id="map" style="height: 850px; width: 100%;"></div>
     </div>
 </div>
+
+<script>
+    var selectedMarkers = [];
+    var markerRefs = {};
+    var cityDistances = {};
+
+    function initMap() {
+        var map = L.map('map').setView([40.416775, -3.703790], 6);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        loadCities().then(cities => {
+            cities.forEach(city => {
+                var marker = L.marker([city.latitude, city.longitude])
+                    .addTo(map)
+                    .bindPopup(city.name)
+                    .on('click', function() {
+                        handleMarkerClick(city.id, this);
+                    });
+                markerRefs[city.id] = marker;
+            });
+        });
+
+        loadDistances().then(distances => {
+            distances.forEach(distance => {
+                var key = distance.city1.id + "-" + distance.city2.id;
+                var reverseKey = distance.city2.id + "-" + distance.city1.id;
+                cityDistances[key] = distance.distance;
+                cityDistances[reverseKey] = distance.distance;
+            });
+        });
+    }
+
+    function handleMarkerClick(cityId, marker) {
+        if (selectedMarkers.length < 2) {
+            selectedMarkers.push(cityId);
+            console.log(cityId)
+            marker.setOpacity(0.5);
+        }
+
+        if (selectedMarkers.length === 2) {
+            showDistance();
+            selectedMarkers = [];
+            resetMarkerOpacity();
+        }
+    }
+
+    function showDistance() {
+        var key = selectedMarkers[0] + "-" + selectedMarkers[1];
+        var distance = cityDistances[key];
+        if (distance) {
+            alert("The distance between the two cities is " + distance + " km");
+        } else {
+            alert("The distance between the two cities was not found.");
+        }
+    }
+
+    function resetMarkerOpacity() {
+        Object.values(markerRefs).forEach(marker => marker.setOpacity(1));
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initMap();
+    });
+
+    function loadCities() {
+        return fetch('/api/cities')
+            .then(response => response.json())
+            .then(data => {
+                return data;
+            });
+    }
+
+    function loadDistances() {
+        return fetch('/api/distances')
+            .then(response => response.json())
+            .then(data => {
+                console.log("Distancias recibidas:", data); // Agregar esto
+                return data;
+            });
+    }
+</script>
 
 </body>
 </html>

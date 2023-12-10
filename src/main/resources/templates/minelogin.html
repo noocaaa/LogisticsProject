@@ -67,19 +67,18 @@
 </head>
 <body>
 <div class="login-container">
+
     <form method="post" class="login-form">
         <h2>Sign in</h2>
 
-        <input type="text" name="email" placeholder="Email" required>
+        <input type="text" name="username" placeholder="Email" required>
         <input type="password" name="password" placeholder="Password" required>
-        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-        
-        <button type="submit">Send</button>
-        <p class="register-link">¿Don't have an account? <a href="hola.com">Log in</a></p>
+        <input type="hidden" name="_csrf" value="${_csrf.token}" />
 
-        {% if error %}
-        <p style="color: red; text-align: center;">{{ error }}</p>
-        {% endif %}
+        <button type="submit">Send</button>
+
+        <p th:if="${param.error}" style="color: red;">Invalid username and password.</p>
+        <p th:if="${param.logout}" style="color: green;">You have been logged out.</p>
     </form>
 </div>
 </body>

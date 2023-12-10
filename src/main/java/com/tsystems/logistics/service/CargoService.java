@@ -4,6 +4,7 @@ import com.tsystems.logistics.entities.Cargo;
 import com.tsystems.logistics.entities.Order;
 import com.tsystems.logistics.entities.Waypoint;
 
+import com.tsystems.logistics.exception.InvalidDriverStatusException;
 import com.tsystems.logistics.repository.CargoRepository;
 import com.tsystems.logistics.repository.OrderRepository;
 
@@ -15,6 +16,7 @@ import com.tsystems.logistics.exception.CargoAlreadyExistsException;
 import com.tsystems.logistics.exception.CargoNotFoundException;
 import com.tsystems.logistics.exception.CargoAssignmentException;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -28,12 +30,16 @@ public class CargoService {
     private final CargoRepository cargoRepository;
     private final OrderRepository orderRepository;
 
+    private final List<String> validStatuses = Arrays.asList("ready", "shipped", "delivered");
+
     @Transactional
     public Cargo addCargo(Cargo cargo) {
-        Optional<Cargo> existingCargo = cargoRepository.findById(cargo.getId());
+        if (cargo.getWeight() < 0 ) {
+            throw new CargoAssignmentException("Cargo weight cannot be null.");
+        }
 
-        if (existingCargo != null) {
-            throw new CargoAlreadyExistsException("A cargo with the same number already exists.");
+        if (!validStatuses.contains(cargo.getStatus())) {
+            throw new CargoAssignmentException("Invalid status, must be a valid type.");
         }
 
         return cargoRepository.save(cargo);
@@ -44,6 +50,18 @@ public class CargoService {
 
         Cargo existingCargo = cargoRepository.findById(cargo.getId())
                 .orElseThrow(() -> new CargoNotFoundException("Cargo not found with id: " + cargo.getId()));
+
+        if (existingCargo == null) {
+            throw new CargoAlreadyExistsException("A cargo with the same number already exists.");
+        }
+
+        if (cargo.getWeight() < 0 ) {
+            throw new CargoAssignmentException("Cargo weight cannot be null.");
+        }
+
+        if (!validStatuses.contains(cargo.getStatus())) {
+            throw new CargoAssignmentException("Invalid status, must be a valid type.");
+        }
 
         existingCargo.setName(cargo.getName());
         existingCargo.setWeight(cargo.getWeight());
@@ -117,20 +135,10 @@ public class CargoService {
         return new CargoDTO(cargo.getId(), cargo.getName(), cargo.getWeight(), cargo.getStatus());
     }
 
-    public Cargo convertToEntity(CargoDTO cargoDTO) {
-        Cargo cargo = new Cargo();
-        cargo.setId(cargoDTO.getId());
-        cargo.setName(cargoDTO.getName());
-        cargo.setWeight(cargoDTO.getWeight());
-        cargo.setStatus(cargoDTO.getStatus());
-        return cargo;
-    }
-
     public List<CargoDTO> convertToDTOList(List<Cargo> cargos) {
         return cargos.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
-
 
 }

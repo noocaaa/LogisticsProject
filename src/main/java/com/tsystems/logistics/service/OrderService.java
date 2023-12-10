@@ -21,8 +21,6 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -38,8 +36,6 @@ public class OrderService {
     private final TruckService truckService;
     private final DriverService driverService;
     private final WaypointService waypointService;
-
-    private Set<Waypoint> waypoints;
 
     private final int MAX_DRIVER_HOURS_PER_MONTH = 176;
 
@@ -67,14 +63,15 @@ public class OrderService {
 
     @Transactional
     public Order updateOrder(Order order, boolean isUpdatingStatusOnly) {
+        Order existingOrder = orderRepository.findById(order.getId())
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + order.getId()));
+
         if (!isUpdatingStatusOnly) {
             validateTruckForOrder(order.getTruck());
             validateDriversForOrder(order.getDrivers());
             validateWaypointsForOrder(order.getWaypoints());
         }
 
-        Order existingOrder = orderRepository.findById(order.getId())
-                .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + order.getId()));
         if (!isUpdatingStatusOnly) {
             existingOrder.setTruck(order.getTruck());
             existingOrder.setDrivers(order.getDrivers());
@@ -127,6 +124,10 @@ public class OrderService {
     public void changeOrderStatus(Integer orderId, boolean completed) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with id: " + orderId));
+
+        if (completed == order.getCompleted()) {
+            throw new OrderNotFoundException("Order is already in the specified state.");
+        }
 
         order.setCompleted(completed);
         orderRepository.save(order);
@@ -232,28 +233,6 @@ public class OrderService {
         return dto;
     }
 
-    public WaypointDTO convertWaypointToDTO(Waypoint waypoint) {
-        WaypointDTO dto = new WaypointDTO();
-        dto.setId(waypoint.getId());
-        dto.setCityId(waypoint.getCity().getId());
-        dto.setCargoId(waypoint.getCargo().getId());
-        dto.setType(waypoint.getType());
-        return dto;
-    }
-
-    private Driver convertDriverDTOtoEntity(DriverDTO driverDTO) {
-        Driver driver = new Driver();
-        driver.setId(driverDTO.getId());
-        driver.setName(driverDTO.getName());
-        driver.setSurname(driverDTO.getSurname());
-        driver.setPersonalNumber(driverDTO.getPersonalNumber());
-        driver.setWorkingHours(driverDTO.getWorkingHours());
-        driver.setStatus(driverDTO.getStatus());
-        driver.setCurrentCity(driverDTO.getCurrentCity());
-        driver.setCurrentTruck(truckService.convertToEntity(driverDTO.getCurrentTruck()));
-        return driver;
-    }
-
     @Transactional
     public List<OrderDTO> getAllOrderDTOs() {
         List<Order> orders = orderRepository.findAll();
@@ -282,7 +261,6 @@ public class OrderService {
 
         return orderDTO;
     }
-
 
     @Transactional
     public boolean checkAndUpdateOrderStatus(Integer orderId) {
