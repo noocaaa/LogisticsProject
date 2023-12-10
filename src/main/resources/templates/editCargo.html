@@ -39,7 +39,6 @@
 
         <form id="updateCargoForm" th:action="@{/cargos/editCargo/{id}(id=${cargo.id})}" th:object="${cargo}" method="post">
             <input type="hidden" name="_method" value="put" />
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
             <input type="hidden" th:field="*{id}" />
 
             <div class="form-group">

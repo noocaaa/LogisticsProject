@@ -10,6 +10,7 @@ import com.tsystems.logistics.repository.*;
 import com.tsystems.logistics.dto.DriverDTO;
 import com.tsystems.logistics.dto.WaypointDTO;
 
+import java.time.LocalTime;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.stream.Collectors;
@@ -47,7 +48,7 @@ public class DriverService {
 
     private final List<String> validStatuses = Arrays.asList("REST", "DRIVING", "SECOND_DRIVER", "LOADING_UNLOADING" );
     private final UserService userService;
-
+    
     @Transactional
     public Driver addDriver(Driver driver) {
         driverRepository.findByPersonalNumber(driver.getPersonalNumber())
@@ -342,7 +343,7 @@ public class DriverService {
 
 
     @Transactional
-    public List<DriverDTO> getAvailableDriversForOrder(OrderDTO order, Integer truckId) {
+    public Map<String, List<DriverDTO>> getAvailableDriversForOrder(OrderDTO order, Integer truckId) {
         Truck truck = truckService.getTruckById(truckId);
         int travelTime = calculateTravelTime(order);
 
@@ -350,12 +351,62 @@ public class DriverService {
         LocalDate endOfMonth = today.withDayOfMonth(today.lengthOfMonth());
         long remainingDaysInMonth = ChronoUnit.DAYS.between(today, endOfMonth);
 
-        return driverRepository.findAll().stream()
+        List<DriverDTO> availableDrivers = driverRepository.findAll().stream()
                 .filter(driver -> isDriverAvailable(driver, travelTime, remainingDaysInMonth))
                 .filter(driver -> "REST".equals(driver.getStatus()))
                 .filter(driver -> driver.getCurrentCity().equals(truck.getCurrentCity()))
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+
+        List<DriverDTO> secondDriverRecommendations = new ArrayList<>();
+        if (travelTime > 8 * 60) {
+            secondDriverRecommendations = getSecondDriverRecommendations(availableDrivers, order, truck);
+        }
+
+        Map<String, List<DriverDTO>> result = new HashMap<>();
+        result.put("availableDrivers", availableDrivers);
+        result.put("secondDriverRecommendations", secondDriverRecommendations);
+
+        return result;
+    }
+
+    private List<DriverDTO> getSecondDriverRecommendations(List<DriverDTO> availableDrivers, OrderDTO order, Truck truck) {
+        return availableDrivers.stream()
+                .filter(driverDTO -> isSuitableForSecondDriver(driverDTO, order, truck))
+                .collect(Collectors.toList());
+    }
+
+    private boolean isSuitableForSecondDriver(DriverDTO driverDTO, OrderDTO order, Truck truck) {
+        Driver driver = convertToEntity(driverDTO);
+
+        if (!hasAvailableMonthlyHours(driver, order)) {
+            return false;
+        }
+
+        if(!"REST".equals(driver.getStatus())) {
+            return false;
+        }
+
+        return driver.getCurrentCity().equals(truck.getCurrentCity());
+    }
+
+    private boolean hasAvailableMonthlyHours(Driver driver, OrderDTO order) {
+        int travelHours = calculateTravelTime(order) / 60;
+        LocalDate today = LocalDate.now();
+        LocalDate endOfMonth = today.withDayOfMonth(today.lengthOfMonth());
+        long remainingDaysInMonth = ChronoUnit.DAYS.between(today, endOfMonth);
+
+        int hoursThisMonth = driver.getWorkingHours();
+        int hoursNextMonth = 0;
+
+        if (travelHours > remainingDaysInMonth * 24) {
+            hoursThisMonth += remainingDaysInMonth * 24;
+            hoursNextMonth += travelHours - remainingDaysInMonth * 24;
+        } else {
+            hoursThisMonth += travelHours;
+        }
+
+        return hoursThisMonth <= 176 && hoursNextMonth <= 176;
     }
 
     private boolean isDriverAvailable(Driver driver, int travelTime, long remainingDaysInMonth) {
