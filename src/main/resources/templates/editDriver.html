@@ -39,7 +39,6 @@
 
         <form id="updateDriverForm" th:action="@{/drivers/editDrivers/{id}(id=${driver.id})}" th:object="${driver}" method="post">
             <input type="hidden" name="_method" value="put" />
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
             <input type="hidden" th:field="*{id}" name="id"/>
 
             <div class="form-group">

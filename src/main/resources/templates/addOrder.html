@@ -115,7 +115,6 @@
         </div>
 
         <form id="addOrderForm" th:action="@{/orders/addOrder}" method="post">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
             <div class="form-group">
                 <label for="completed">Completed:</label>

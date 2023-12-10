@@ -38,7 +38,6 @@
     </div>
 
     <form id="addCargoForm" th:action="@{/cargos/addCargo}" method="post">
-      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
       <div class="form-group">
         <label for="name">Cargo Name:</label>

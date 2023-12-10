@@ -118,11 +118,6 @@ public class CargoService {
             throw new CargoAssignmentException("Order is already completed.");
         }
 
-        Waypoint newWaypoint = new Waypoint();
-        newWaypoint.setCargo(cargo);
-        newWaypoint.setOrder(order);
-        order.getWaypoints().add(newWaypoint);
-
         cargo.setStatus("shipped");
         cargoRepository.save(cargo);
 

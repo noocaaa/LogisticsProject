@@ -3,10 +3,7 @@ package com.tsystems.logistics.controller;
 import com.tsystems.logistics.dto.*;
 
 
-import com.tsystems.logistics.entities.Cargo;
-import com.tsystems.logistics.entities.City;
-import com.tsystems.logistics.entities.Order;
-import com.tsystems.logistics.entities.Truck;
+import com.tsystems.logistics.entities.*;
 import com.tsystems.logistics.service.CargoService;
 import com.tsystems.logistics.service.*;
 import org.springframework.data.domain.Page;
@@ -20,7 +17,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.stereotype.Controller;
 
+import java.awt.*;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
@@ -99,6 +98,8 @@ public class OrderController {
                 .map(truckService::convertToDTO)
                 .collect(Collectors.toList());
 
+        model.addAttribute("truckDTOs", truckDTOs);
+
         return ResponseEntity.ok(truckDTOs);
     }
 
@@ -114,14 +115,18 @@ public class OrderController {
     }
 
     @GetMapping("/assignDriver/{orderId}")
-    public ResponseEntity<List<DriverDTO>>  showAssignDriverForm(@PathVariable Integer orderId, Model model) {
+    public ResponseEntity<Map<String, List<DriverDTO>>> showAssignDriverForm(@PathVariable Integer orderId, Model model) {
         Order order = orderService.getOrderById(orderId);
-
         OrderDTO orderDTO = orderService.convertOrderToDTO(order);
-        List<DriverDTO> availableDrivers = driverService.getAvailableDriversForOrder(orderDTO, orderDTO.getTruck().getId());
+        Truck truck = truckService.getTruckById(orderDTO.getTruck().getId());
 
-        return ResponseEntity.ok(availableDrivers);
+        Map<String, List<DriverDTO>> response = driverService.getAvailableDriversForOrder(orderDTO, truck.getId());
+
+        model.addAttribute("driverDTOs", response.get("availableDrivers"));
+
+        return ResponseEntity.ok(response);
     }
+
 
     @PostMapping("/assignDriver/{orderId}")
     public String assignDriverToOrder(@PathVariable Integer orderId, @RequestParam List<Integer> driverIds, RedirectAttributes redirectAttributes) {

@@ -117,10 +117,8 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div th:if="${#lists.isEmpty(truckDTOs)}">
-                        <p>There are no available trucks for this order.</p>
-                    </div>
-                    <form th:if="${!#lists.isEmpty(truckDTOs)}" th:action="@{/orders/assignTruck/{orderId}(orderId=${order.id})}" method="post">
+                    <div id="messageContainer" style="color: red;"></div>
+                    <form th:action="@{/orders/assignTruck/{orderId}(orderId=${order.id})}" method="post">
                         <select name="truckId">
                             <option value="">Select Truck</option>
                             <option th:each="truck : ${truckDTOs}"
@@ -144,10 +142,8 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div th:if="${#lists.isEmpty(driverDTOs)}">
-                        <p>There are no available drivers for this order.</p>
-                    </div>
-                    <form th:if="${!#lists.isEmpty(driverDTOs)}" th:action="@{/orders/assignDriver/{orderId}(orderId=${order.id})}" method="post">
+                    <div name="messageContainerDriver" style="color: red;"></div>
+                    <form name="driverForm" th:action="@{/orders/assignDriver/{orderId}(orderId=${order.id})}" method="post">
                         <select name="driverIds" multiple>
                             <option value="">Select Driver</option>
                             <option th:each="driver : ${driverDTOs}"
@@ -167,7 +163,6 @@
 <script>
     $(document).ready(function() {
         $('.assignTruckBtn').each(function() {
-            Co
             var orderId = $(this).data('orderid');
 
             $('#assignTruckModal' + orderId).on('hidden.bs.modal', function () {
@@ -189,7 +184,6 @@
             url: '/orders/assignTruck/' + orderId,
             type: 'GET',
             success: function(trucks) {
-                console.log(trucks)
                 fillTruckModal(trucks, orderId);
             },
             error: function(error) {
@@ -202,8 +196,8 @@
         $.ajax({
             url: '/orders/assignDriver/' + orderId,
             type: 'GET',
-            success: function(drivers) {
-                fillDriver(drivers, orderId);
+            success: function(response) {
+                fillDriver(response, orderId);
             },
             error: function(error) {
                 console.log('Error loading the drivers:', error);
@@ -214,25 +208,53 @@
     function fillTruckModal(trucks, orderId) {
         var modal = $('#assignTruckModal' + orderId);
         var truckSelect = modal.find('select[name="truckId"]');
+        var messageContainer = modal.find('div[name="messageContainer"]');
+        var form = modal.find('form[name="truckForm"]');
+
         truckSelect.empty();
+        messageContainer.hide();
 
-        trucks.forEach(function (truck) {
-            truckSelect.append(new Option(truck.number, truck.id));
-        });
-
-        modal.modal('show');
+        if (trucks.length === 0) {
+            messageContainer.text('There are no trucks available for this order');
+            messageContainer.show();
+            form.hide();
+            modal.modal('show');
+        } else {
+            truckSelect.append('<option value="">Select Truck</option>');
+            trucks.forEach(function (truck) {
+                truckSelect.append(new Option(truck.number, truck.id));
+            });
+            messageContainer.show()
+            messageContainer.text('');
+            modal.modal('show');
+        }
     }
 
-    function fillDriver(drivers, orderId) {
-        var modal2 = $('#assignDriverModal' + orderId);
-        var driverSelect = modal2.find('select[name="driverIds"]');
+    function fillDriver(response, orderId) {
+        var modal = $('#assignDriverModal' + orderId);
+        var driverSelect = modal.find('select[name="driverIds"]');
+        var messageContainer = modal.find('div[name="messageContainerDriver"]');
+        var form = modal.find('form[name="driverForm"]');
+
         driverSelect.empty();
+        messageContainer.hide();
 
-        drivers.forEach(function(driver) {
-            driverSelect.append(new Option(driver.name + ' ' + driver.surname, driver.id));
-        });
+        if (response.availableDrivers.length === 0) {
+            messageContainer.text('There are no drivers available for this order.');
+            messageContainer.show();
+            form.hide();
+            modal.modal('show');
+        } else {
+            response.availableDrivers.forEach(function(driver) {
+                driverSelect.append(new Option(driver.name + ' ' + driver.surname, driver.id));
+            });
 
-        modal2.modal('show');
+            if (response.secondDriverRecommendations) {
+                messageContainer.text("Long trip. If possible, please, choose a second driver.")
+                messageContainer.show();
+            }
+            modal.modal('show');
+        }
     }
 
 </script>
