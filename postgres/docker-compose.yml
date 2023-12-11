@@ -14,14 +14,17 @@ services:
       - DATABASE_PASSWORD=nocavi12
 
   db:
-    image: nooocaaaa/postgres-logistics
+    image: nooocaaaa/postgres-logistics:latest
     restart: unless-stopped
     environment:
       - POSTGRES_DB=logistics
       - POSTGRES_USER=noelia
       - POSTGRES_PASSWORD=nocavi12
+    ports:
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
 volumes:
   pgdata:
+
