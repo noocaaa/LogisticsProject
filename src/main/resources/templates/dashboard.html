@@ -70,7 +70,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:each="truck : ${trucks}">
+                        <tr th:each="truck, stat : ${trucks}" th:if="${stat.count <= 4}">
                             <td th:text="${truck.number}">Truck Number</td>
                             <td th:text="${truck.capacity}">Capacity</td>
                             <td th:text="${truck.currentCity}">City</td>
